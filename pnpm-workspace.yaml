@@ -1,0 +1,6 @@
+minimumReleaseAgeExclude:
+  - '@expo/cli@57.0.3'
+  - '@expo/prebuild-config@57.0.3'
+  - expo-modules-autolinking@57.0.3
+  - expo-modules-core@57.0.1
+  - expo@57.0.1
