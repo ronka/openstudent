@@ -22,10 +22,28 @@ export default function AppTabs() {
       <TabList asChild>
         <CustomTabList>
           <TabTrigger name="home" href="/" asChild>
-            <TabButton>Home</TabButton>
+            <TabButton>בית</TabButton>
           </TabTrigger>
-          <TabTrigger name="explore" href="/explore" asChild>
-            <TabButton>Explore</TabButton>
+          <TabTrigger name="courses" href="/courses" asChild>
+            <TabButton>קורסים</TabButton>
+          </TabTrigger>
+          <TabTrigger name="assignments" href="/assignments" asChild>
+            <TabButton>מטלות</TabButton>
+          </TabTrigger>
+          <TabTrigger name="exams" href="/exams" asChild>
+            <TabButton>מבחנים</TabButton>
+          </TabTrigger>
+          <TabTrigger name="materials" href="/materials" asChild>
+            <TabButton>חומרים</TabButton>
+          </TabTrigger>
+          <TabTrigger name="plan" href="/plan" asChild>
+            <TabButton>תוכנית</TabButton>
+          </TabTrigger>
+          <TabTrigger name="pomodoro" href="/pomodoro" asChild>
+            <TabButton>פומודורו</TabButton>
+          </TabTrigger>
+          <TabTrigger name="settings" href="/settings" asChild>
+            <TabButton>הגדרות</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>
@@ -55,7 +73,7 @@ export function CustomTabList(props: TabListProps) {
     <View {...props} style={styles.tabListContainer}>
       <ThemedView type="backgroundElement" style={styles.innerContainer}>
         <ThemedText type="smallBold" style={styles.brandText}>
-          Expo Starter
+          OpenStudent
         </ThemedText>
 
         {props.children}

@@ -37,7 +37,10 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "update": "node scripts/increment-update-version.js \"src/app/(tabs)/settings.tsx\" && npx eas update",
+    "build:production:ios": "node scripts/bump-app-version.js && npx eas build --platform ios --profile production",
+    "build:production:android": "node scripts/bump-app-version.js && npx eas build --platform android --profile production"
   },
   "private": true
 }
