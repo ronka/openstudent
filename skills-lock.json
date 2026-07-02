@@ -1,6 +1,18 @@
 {
   "version": 1,
   "skills": {
+    "app-onboarding": {
+      "source": "ronka/skills",
+      "sourceType": "github",
+      "skillPath": "app-onboarding/SKILL.md",
+      "computedHash": "871b59cb49b85454b42108e2094ced732c956ca664b62c0fa9afbbb7d4d90008"
+    },
+    "app-version-debug": {
+      "source": "ronka/skills",
+      "sourceType": "github",
+      "skillPath": "app-version-debug/SKILL.md",
+      "computedHash": "35e7c7990fe10c1e9724f59e58b6e98f59b9311af31d8c32be567abde794b7f7"
+    },
     "gluestack-ui-v5": {
       "source": "gluestack/agent-skills",
       "sourceType": "github",

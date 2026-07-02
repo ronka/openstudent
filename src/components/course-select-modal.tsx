@@ -116,7 +116,7 @@ export function CourseSelectField({
   return (
     <Field label={label}>
       <Pressable onPress={() => setVisible(true)}>
-        <ThemedView type="backgroundElement" className="rounded-2xl px-4 py-3">
+        <ThemedView type="backgroundElement" style={styles.trigger}>
           <ThemedText themeColor={selected ? 'text' : 'textSecondary'} style={styles.triggerText}>
             {selected?.name ?? placeholder}
           </ThemedText>
@@ -186,6 +186,11 @@ const styles = StyleSheet.create({
   empty: {
     textAlign: rtlTextAlign.center,
     padding: Spacing.three,
+  },
+  trigger: {
+    borderRadius: Spacing.four,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
   },
   triggerText: {
     textAlign: rtlTextAlign.start,
