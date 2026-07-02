@@ -6,13 +6,13 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 
-export function CaptureFab() {
-  const router = useRouter();
+/** Presentational centered "+" floating button. */
+export function Fab({ onPress }: { onPress: () => void }) {
   const insets = useSafeAreaInsets();
 
   return (
     <Pressable
-      onPress={() => router.push('/capture')}
+      onPress={onPress}
       style={[styles.container, { bottom: insets.bottom + BottomTabInset + Spacing.three }]}>
       <ThemedView type="text" style={styles.fab}>
         <ThemedText themeColor="background" style={styles.plus}>
@@ -21,6 +21,16 @@ export function CaptureFab() {
       </ThemedView>
     </Pressable>
   );
+}
+
+/**
+ * FAB that opens the quick-capture screen. Mounted directly by the tabs that
+ * want it; the courses and assignments tabs mount their own `Fab` instead
+ * (opening their typed create forms), so there's nothing to coordinate here.
+ */
+export function CaptureFab() {
+  const router = useRouter();
+  return <Fab onPress={() => router.push('/capture')} />;
 }
 
 const styles = StyleSheet.create({

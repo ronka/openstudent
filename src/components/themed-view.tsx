@@ -1,16 +1,34 @@
-import { View, type ViewProps } from 'react-native';
+import { type ViewProps } from 'react-native';
 
+import { Box } from '@/components/ui/box';
 import { ThemeColor } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 
 export type ThemedViewProps = ViewProps & {
   lightColor?: string;
   darkColor?: string;
   type?: ThemeColor;
+  className?: string;
 };
 
-export function ThemedView({ style, lightColor, darkColor, type, ...otherProps }: ThemedViewProps) {
-  const theme = useTheme();
+// Old ThemeColor keys -> gluestack/shadcn background tokens (restyle: indigo accent -> neutral primary).
+const BACKGROUND_CLASSNAMES: Record<ThemeColor, string> = {
+  text: 'bg-foreground',
+  background: 'bg-background',
+  backgroundElement: 'bg-secondary',
+  backgroundSelected: 'bg-accent',
+  textSecondary: 'bg-muted-foreground',
+  accent: 'bg-primary',
+  accentSoft: 'bg-accent',
+  card: 'bg-card',
+  border: 'bg-border',
+};
 
-  return <View style={[{ backgroundColor: theme[type ?? 'background'] }, style]} {...otherProps} />;
+export function ThemedView({ style, lightColor, darkColor, type, className, ...otherProps }: ThemedViewProps) {
+  return (
+    <Box
+      className={[BACKGROUND_CLASSNAMES[type ?? 'background'], className].filter(Boolean).join(' ')}
+      style={style}
+      {...otherProps}
+    />
+  );
 }

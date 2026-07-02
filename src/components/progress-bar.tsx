@@ -1,8 +1,8 @@
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { rtlFlexDirection } from '@/utils/rtl';
 
 /**
@@ -18,24 +18,13 @@ export function ProgressBar({
   height?: number;
   showLabel?: boolean;
 }) {
-  const theme = useTheme();
   const pct = Math.max(0, Math.min(1, value));
 
   return (
     <View style={styles.container}>
-      <View
-        style={[
-          styles.track,
-          { backgroundColor: theme.accentSoft, height, borderRadius: Radius.pill },
-        ]}>
-        <View
-          style={{
-            width: `${pct * 100}%`,
-            backgroundColor: theme.accent,
-            borderRadius: Radius.pill,
-          }}
-        />
-      </View>
+      <ThemedView type="accentSoft" style={[styles.track, { height, borderRadius: Radius.pill }]}>
+        <ThemedView type="accent" style={{ width: `${pct * 100}%`, borderRadius: Radius.pill }} />
+      </ThemedView>
       {showLabel && (
         <ThemedText type="smallBold" themeColor="accent">
           {Math.round(pct * 100)}%

@@ -1,3 +1,4 @@
+import { getAssignmentName } from './constants';
 import type { Assignment, Course, Exam, Material, Recording } from './types';
 
 /**
@@ -18,8 +19,8 @@ export const seedCourses: Course[] = [
   { id: 'c9', name: 'אלגוריתמים', courseNumber: '20417', faculty: 'מדעי המחשב', credits: 4, type: 'חובה', level: 'ר', status: 'planned', year: 2020, semester: 'ג', notes: 'קורס קשה, לשקול לעשות בסמסטר ניפרד' },
   { id: 'c10', name: 'מבוא לרשתות תקשורת מחשבים', courseNumber: '20582', faculty: 'מדעי המחשב', credits: 6, type: 'בחירה', level: 'מ', status: 'planned', year: 2020, semester: 'ב', notes: 'לעשות אותו כי הוא הרבה נקז' },
   { id: 'c11', name: 'סדנה במדעי הנתונים', courseNumber: '20936', faculty: 'מדעי המחשב', credits: 4, type: 'סמינר', level: 'מ', status: 'planned', year: 2020, semester: 'ב' },
-  { id: 'c12', name: 'אוטומטים ושפות פורמליות', courseNumber: '20440', faculty: 'מדעי המחשב', credits: 4, type: 'חובה', level: 'ר', status: 'studying', year: 2020, semester: 'א', notes: 'לעשות לפני אלגוריתמים' },
-  { id: 'c13', name: 'לוגיקה למדעי המחשב', courseNumber: '20466', faculty: 'מתמטיקה', credits: 4, type: 'חובה', level: 'ר', status: 'studying', year: 2020, semester: 'א' },
+  { id: 'c12', name: 'אוטומטים ושפות פורמליות', courseNumber: '20440', faculty: 'מדעי המחשב', credits: 4, type: 'חובה', level: 'ר', status: 'studying', year: 2026, semester: 'ג', notes: 'לעשות לפני אלגוריתמים' },
+  { id: 'c13', name: 'לוגיקה למדעי המחשב', courseNumber: '20466', faculty: 'מתמטיקה', credits: 4, type: 'חובה', level: 'ר', status: 'studying', year: 2026, semester: 'ג' },
   { id: 'c14', name: 'הסתברות לתלמידי מדעי המחשב', courseNumber: '20425', faculty: 'מתמטיקה', credits: 4, type: 'חובה', level: 'ר', status: 'passed', year: 2019, semester: 'ג', grade: 87 },
   { id: 'c15', name: 'מערכות בסיסי-נתונים', courseNumber: '20277', faculty: 'מדעי המחשב', credits: 4, type: 'בחירה', level: 'ר', status: 'passed', year: 2019, semester: 'ב', grade: 90, notes: "לשקול לקחת בקיץ 2019ג'" },
   { id: 'c16', name: 'ארגון המחשב', courseNumber: '20471', faculty: 'מדעי המחשב', credits: 3, type: 'חובה', level: 'ר', status: 'passed', year: 2019, semester: 'ב', grade: 88 },
@@ -42,22 +43,31 @@ function courseId(name: string): string {
   return id;
 }
 
-export const seedAssignments: Assignment[] = [
-  { id: 'a1', name: 'ממן 11', courseId: courseId('אוטומטים ושפות פורמליות'), status: 'done', dueDate: '2023-07-06', materialIds: [] },
-  { id: 'a2', name: 'ממן 12', courseId: courseId('מתמטיקה בדידה'), status: 'done', dueDate: '2023-07-06', materialIds: [] },
-  { id: 'a3', name: 'ממן 11', courseId: courseId('מתמטיקה בדידה'), status: 'done', dueDate: '2023-07-06', materialIds: [] },
-  { id: 'a4', name: 'ממח 23', courseId: courseId('לוגיקה למדעי המחשב'), status: 'todo', dueDate: '2023-07-21', materialIds: [] },
-  { id: 'a5', name: 'ממח 22', courseId: courseId('לוגיקה למדעי המחשב'), status: 'todo', dueDate: '2023-07-28', materialIds: [] },
-  { id: 'a6', name: 'ממח 21', courseId: courseId('לוגיקה למדעי המחשב'), status: 'todo', dueDate: '2023-07-07', materialIds: [] },
-  { id: 'a7', name: 'ממן 13', courseId: courseId('לוגיקה למדעי המחשב'), status: 'todo', dueDate: '2023-07-12', materialIds: [] },
-  { id: 'a8', name: 'ממן 12', courseId: courseId('לוגיקה למדעי המחשב'), status: 'in_progress', dueDate: '2023-07-07', materialIds: ['m3'] },
-  { id: 'a9', name: 'ממן 11', courseId: courseId('לוגיקה למדעי המחשב'), status: 'in_progress', dueDate: '2023-07-05', materialIds: [] },
-  { id: 'a10', name: 'ממח 22', courseId: courseId('אוטומטים ושפות פורמליות'), status: 'todo', dueDate: '2023-07-07', materialIds: [] },
-  { id: 'a11', name: 'ממח 21', courseId: courseId('אוטומטים ושפות פורמליות'), status: 'in_progress', dueDate: '2023-07-27', materialIds: ['m9'] },
-  { id: 'a12', name: 'ממן 14', courseId: courseId('אוטומטים ושפות פורמליות'), status: 'in_progress', dueDate: '2023-07-22', materialIds: ['m10'] },
-  { id: 'a13', name: 'ממן 13', courseId: courseId('אוטומטים ושפות פורמליות'), status: 'done', dueDate: '2023-07-06', materialIds: [] },
-  { id: 'a14', name: 'ממן 12', courseId: courseId('אוטומטים ושפות פורמליות'), status: 'done', dueDate: '2023-07-06', materialIds: [] },
+/** Compact seed row before names/materialIds are filled in. */
+type SeedAssignment = Omit<Assignment, 'name' | 'materialIds'> & { materialIds?: string[] };
+
+const rawAssignments: SeedAssignment[] = [
+  { id: 'a1', type: 'MAMAN', taskNumber: 11, courseId: courseId('אוטומטים ושפות פורמליות'), status: 'done', dueDate: '2023-07-06' },
+  { id: 'a2', type: 'MAMAN', taskNumber: 12, courseId: courseId('מתמטיקה בדידה'), status: 'done', dueDate: '2023-07-06' },
+  { id: 'a3', type: 'MAMAN', taskNumber: 11, courseId: courseId('מתמטיקה בדידה'), status: 'done', dueDate: '2023-07-06' },
+  { id: 'a4', type: 'MAMACH', taskNumber: 23, courseId: courseId('לוגיקה למדעי המחשב'), status: 'todo', dueDate: '2023-07-21' },
+  { id: 'a5', type: 'MAMACH', taskNumber: 22, courseId: courseId('לוגיקה למדעי המחשב'), status: 'todo', dueDate: '2023-07-28' },
+  { id: 'a6', type: 'MAMACH', taskNumber: 21, courseId: courseId('לוגיקה למדעי המחשב'), status: 'todo', dueDate: '2023-07-07' },
+  { id: 'a7', type: 'MAMAN', taskNumber: 13, courseId: courseId('לוגיקה למדעי המחשב'), status: 'todo', dueDate: '2023-07-12' },
+  { id: 'a8', type: 'MAMAN', taskNumber: 12, courseId: courseId('לוגיקה למדעי המחשב'), status: 'todo', dueDate: '2023-07-07', materialIds: ['m3'] },
+  { id: 'a9', type: 'MAMAN', taskNumber: 11, courseId: courseId('לוגיקה למדעי המחשב'), status: 'todo', dueDate: '2023-07-05' },
+  { id: 'a10', type: 'MAMACH', taskNumber: 22, courseId: courseId('אוטומטים ושפות פורמליות'), status: 'todo', dueDate: '2023-07-07' },
+  { id: 'a11', type: 'MAMACH', taskNumber: 21, courseId: courseId('אוטומטים ושפות פורמליות'), status: 'todo', dueDate: '2023-07-27', materialIds: ['m9'] },
+  { id: 'a12', type: 'MAMAN', taskNumber: 14, courseId: courseId('אוטומטים ושפות פורמליות'), status: 'todo', dueDate: '2023-07-22', materialIds: ['m10'] },
+  { id: 'a13', type: 'MAMAN', taskNumber: 13, courseId: courseId('אוטומטים ושפות פורמליות'), status: 'done', dueDate: '2023-07-06' },
+  { id: 'a14', type: 'MAMAN', taskNumber: 12, courseId: courseId('אוטומטים ושפות פורמליות'), status: 'done', dueDate: '2023-07-06' },
 ];
+
+export const seedAssignments: Assignment[] = rawAssignments.map((assignment) => ({
+  ...assignment,
+  name: getAssignmentName(assignment.type, assignment.taskNumber),
+  materialIds: assignment.materialIds ?? [],
+}));
 
 export const seedExams: Exam[] = [
   { id: 'e1', title: 'מתמטיקה בדידה', courseId: courseId('מתמטיקה בדידה'), date: '2023-03-25', grade: 85 },

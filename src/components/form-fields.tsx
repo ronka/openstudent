@@ -1,0 +1,132 @@
+import type { ReactNode } from 'react';
+import { ScrollView, StyleSheet, View, type KeyboardTypeOptions, type StyleProp, type ViewStyle } from 'react-native';
+
+import { FilterChip } from '@/components/filter-chip';
+import { ThemedText } from '@/components/themed-text';
+import { Input, InputField } from '@/components/ui/input';
+import { Spacing } from '@/constants/theme';
+import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
+
+/** A labeled form row. Building block for ChipField / TextField and custom fields. */
+export function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <View style={styles.field}>
+      <ThemedText type="smallBold" style={styles.label}>
+        {label}
+      </ThemedText>
+      {children}
+    </View>
+  );
+}
+
+/**
+ * Single-select row of chips over `options`. Selection lives in the caller
+ * (`isSelected` / `onSelect`), so it handles required picks and optional
+ * toggle-to-clear alike. Pass `scroll` for long lists (numbers, courses).
+ */
+export function ChipField<T>({
+  label,
+  options,
+  isSelected,
+  onSelect,
+  getLabel,
+  getKey = (option) => String(option),
+  scroll = false,
+}: {
+  label: string;
+  options: readonly T[];
+  isSelected: (option: T) => boolean;
+  onSelect: (option: T) => void;
+  getLabel: (option: T) => string;
+  getKey?: (option: T) => string | number;
+  scroll?: boolean;
+}) {
+  const chips = options.map((option) => (
+    <FilterChip
+      key={getKey(option)}
+      label={getLabel(option)}
+      selected={isSelected(option)}
+      onPress={() => onSelect(option)}
+    />
+  ));
+
+  return (
+    <Field label={label}>
+      {scroll ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rowScroll}>
+          {chips}
+        </ScrollView>
+      ) : (
+        <View style={styles.rowWrap}>{chips}</View>
+      )}
+    </Field>
+  );
+}
+
+/** Themed single-line text input matching the app's form styling. Use directly for
+ * inputs with no stacked label (e.g. inline next to another field); use `TextField`
+ * when the input needs its own labeled row. */
+export function ThemedTextInput({
+  value,
+  onChangeText,
+  placeholder,
+  keyboardType,
+  style,
+}: {
+  value: string;
+  onChangeText: (text: string) => void;
+  placeholder?: string;
+  keyboardType?: KeyboardTypeOptions;
+  style?: StyleProp<ViewStyle>;
+}) {
+  return (
+    <Input className="rounded-2xl border-0 bg-secondary px-4 py-2" style={style}>
+      <InputField
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        keyboardType={keyboardType}
+        style={{ textAlign: rtlTextAlign.start }}
+      />
+    </Input>
+  );
+}
+
+/** Labeled form row wrapping `ThemedTextInput`. */
+export function TextField({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  keyboardType,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  placeholder?: string;
+  keyboardType?: KeyboardTypeOptions;
+}) {
+  return (
+    <Field label={label}>
+      <ThemedTextInput value={value} onChangeText={onChangeText} placeholder={placeholder} keyboardType={keyboardType} />
+    </Field>
+  );
+}
+
+const styles = StyleSheet.create({
+  field: {
+    gap: Spacing.two,
+  },
+  label: {
+    textAlign: rtlTextAlign.start,
+  },
+  rowWrap: {
+    flexDirection: rtlFlexDirection.row,
+    gap: Spacing.two,
+    flexWrap: 'wrap',
+  },
+  rowScroll: {
+    flexDirection: rtlFlexDirection.row,
+    gap: Spacing.two,
+  },
+});

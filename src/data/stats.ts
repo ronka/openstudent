@@ -4,6 +4,7 @@
  * reusable/testable. Nothing here reads the store directly — always pass the arrays in.
  */
 
+import { deriveCourseStatus, getCurrentSemester, type CurrentSemester } from './semester';
 import type { Assignment, Course, Exam } from './types';
 
 export interface DegreeStats {
@@ -17,7 +18,7 @@ export interface DegreeStats {
   totalCount: number;
 }
 
-export function degreeStats(courses: Course[]): DegreeStats {
+export function degreeStats(courses: Course[], current: CurrentSemester = getCurrentSemester()): DegreeStats {
   let totalCredits = 0;
   let passedCredits = 0;
   let passedCount = 0;
@@ -27,12 +28,13 @@ export function degreeStats(courses: Course[]): DegreeStats {
   for (const course of courses) {
     const credits = course.credits ?? 0;
     totalCredits += credits;
-    if (course.status === 'passed') {
+    const status = deriveCourseStatus(course, current);
+    if (status === 'passed') {
       passedCredits += credits;
       passedCount += 1;
-    } else if (course.status === 'studying') {
+    } else if (status === 'studying') {
       studyingCount += 1;
-    } else if (course.status === 'planned') {
+    } else if (status === 'planned') {
       plannedCount += 1;
     }
   }
@@ -64,7 +66,7 @@ export function gpaStats(courses: Course[]): GpaStats {
   let max = -Infinity;
 
   for (const course of courses) {
-    if (course.status !== 'passed' || course.grade === undefined) continue;
+    if (course.grade === undefined) continue;
     // Weight by credits, but fall back to 1 so credit-less courses still count.
     const weight = course.credits ?? 1;
     weightedSum += course.grade * weight;
@@ -84,25 +86,22 @@ export function gpaStats(courses: Course[]): GpaStats {
 
 export interface AssignmentBreakdown {
   todo: number;
-  in_progress: number;
   done: number;
-  /** todo + in_progress */
+  /** Alias for todo, kept for readability at call sites. */
   open: number;
   total: number;
 }
 
 export function assignmentBreakdown(assignments: Assignment[]): AssignmentBreakdown {
   let todo = 0;
-  let in_progress = 0;
   let done = 0;
 
   for (const assignment of assignments) {
     if (assignment.status === 'todo') todo += 1;
-    else if (assignment.status === 'in_progress') in_progress += 1;
     else if (assignment.status === 'done') done += 1;
   }
 
-  return { todo, in_progress, done, open: todo + in_progress, total: assignments.length };
+  return { todo, done, open: todo, total: assignments.length };
 }
 
 export interface GradePoint {

@@ -1,17 +1,20 @@
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { Badge } from '@/components/badge';
+import { TONE_BACKGROUND_CLASSNAMES } from '@/components/badge';
+import { CaptureFab } from '@/components/capture-fab';
 import { DashboardCard } from '@/components/dashboard-card';
 import { EntityRow } from '@/components/entity-row';
 import { MiniBarChart } from '@/components/mini-bar-chart';
 import { ProgressBar } from '@/components/progress-bar';
 import { SegmentedBar } from '@/components/segmented-bar';
 import { StatCard } from '@/components/stat-card';
+import { TaskCheckbox } from '@/components/task-checkbox';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { ASSIGNMENT_STATUS_LABELS, ASSIGNMENT_STATUS_TONES } from '@/data/constants';
+import { ASSIGNMENT_STATUS_LABELS, ASSIGNMENT_STATUS_TONES, ASSIGNMENT_STATUSES } from '@/data/constants';
+import { isCurrentSemester, getCurrentSemester } from '@/data/semester';
 import {
   assignmentBreakdown,
   degreeStats,
@@ -19,9 +22,8 @@ import {
   gradeTimeline,
   upcomingExamsSorted,
 } from '@/data/stats';
-import { useAssignments, useCourses, useExams, useRecordings } from '@/data/store';
+import { assignmentsCollection, useAssignments, useCourses, useExams, useRecordings } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
-import { useTheme } from '@/hooks/use-theme';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 const OPEN_ASSIGNMENTS_LIMIT = 5;
@@ -32,15 +34,37 @@ export default function DashboardScreen() {
   const exams = useExams();
   const recordings = useRecordings();
   const screenPadding = useScreenPadding();
-  const theme = useTheme();
 
   const courseNameById = useMemo(() => new Map(courses.map((course) => [course.id, course.name])), [courses]);
+
+  const current = useMemo(() => getCurrentSemester(), []);
+  const currentSemesterCourses = useMemo(
+    () => courses.filter((course) => isCurrentSemester(course, current)),
+    [courses, current]
+  );
 
   const degree = useMemo(() => degreeStats(courses), [courses]);
   const gpa = useMemo(() => gpaStats(courses), [courses]);
   const breakdown = useMemo(() => assignmentBreakdown(assignments), [assignments]);
   const grades = useMemo(() => gradeTimeline(exams), [exams]);
   const upcomingExams = useMemo(() => upcomingExamsSorted(exams), [exams]);
+
+  const openTaskCountByCourse = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const assignment of assignments) {
+      if (assignment.status !== 'todo') continue;
+      map.set(assignment.courseId, (map.get(assignment.courseId) ?? 0) + 1);
+    }
+    return map;
+  }, [assignments]);
+
+  const nextExamDateByCourse = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const exam of upcomingExams) {
+      if (!map.has(exam.courseId)) map.set(exam.courseId, exam.date);
+    }
+    return map;
+  }, [upcomingExams]);
 
   const openAssignments = useMemo(
     () =>
@@ -65,6 +89,30 @@ export default function DashboardScreen() {
             {`${degree.passedCount} קורסים הושלמו · ${degreePercent}% מהתואר`}
           </ThemedText>
         </View>
+
+        <DashboardCard title="הסמסטר הנוכחי">
+          {currentSemesterCourses.length === 0 ? (
+            <ThemedText type="small" themeColor="textSecondary" style={styles.cardCaption}>
+              אין קורסים בסמסטר הנוכחי
+            </ThemedText>
+          ) : (
+            <View style={styles.list}>
+              {currentSemesterCourses.map((course) => (
+                <EntityRow
+                  key={course.id}
+                  title={course.name}
+                  subtitle={[
+                    `${openTaskCountByCourse.get(course.id) ?? 0} משימות פתוחות`,
+                    nextExamDateByCourse.get(course.id) ? `מבחן הבא: ${nextExamDateByCourse.get(course.id)}` : undefined,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                  href={`/courses/${course.id}`}
+                />
+              ))}
+            </View>
+          )}
+        </DashboardCard>
 
         <View style={styles.grid}>
           <StatCard value={`${degreePercent}%`} label="מהתואר" progress={degree.degreePct} />
@@ -95,11 +143,11 @@ export default function DashboardScreen() {
 
         <DashboardCard title="מטלות">
           <SegmentedBar
-            segments={[
-              { label: ASSIGNMENT_STATUS_LABELS.done, value: breakdown.done, color: '#15803D' },
-              { label: ASSIGNMENT_STATUS_LABELS.in_progress, value: breakdown.in_progress, color: theme.accent },
-              { label: ASSIGNMENT_STATUS_LABELS.todo, value: breakdown.todo, color: theme.textSecondary },
-            ]}
+            segments={ASSIGNMENT_STATUSES.map((status) => ({
+              label: ASSIGNMENT_STATUS_LABELS[status],
+              value: breakdown[status],
+              colorClassName: TONE_BACKGROUND_CLASSNAMES[ASSIGNMENT_STATUS_TONES[status]],
+            }))}
           />
         </DashboardCard>
 
@@ -135,13 +183,13 @@ export default function DashboardScreen() {
                   key={assignment.id}
                   title={assignment.name}
                   subtitle={[courseNameById.get(assignment.courseId ?? ''), assignment.dueDate].filter(Boolean).join(' · ')}
-                  trailing={
-                    <Badge
-                      label={ASSIGNMENT_STATUS_LABELS[assignment.status]}
-                      tone={ASSIGNMENT_STATUS_TONES[assignment.status]}
+                  leading={
+                    <TaskCheckbox
+                      checked={false}
+                      onToggle={() => assignmentsCollection.update(assignment.id, { status: 'done' })}
                     />
                   }
-                  href={assignment.courseId ? `/courses/${assignment.courseId}` : undefined}
+                  href={`/assignments/${assignment.id}`}
                 />
               ))}
             </View>
@@ -168,6 +216,8 @@ export default function DashboardScreen() {
           )}
         </DashboardCard>
       </ScrollView>
+
+      <CaptureFab />
     </ThemedView>
   );
 }

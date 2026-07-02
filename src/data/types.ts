@@ -8,7 +8,8 @@ export type CourseType = 'חובה' | 'בחירה' | 'סמינר';
 export type CourseLevel = 'ר' | 'מ';
 export type CourseStatus = 'planned' | 'studying' | 'passed';
 export type Semester = 'א' | 'ב' | 'ג';
-export type AssignmentStatus = 'todo' | 'in_progress' | 'done';
+export type AssignmentStatus = 'todo' | 'done';
+export type AssignmentType = 'MAMAN' | 'MAMACH';
 
 /** Courses (רשימת קורסים) — the central catalog. §2.1 */
 export interface Course {
@@ -26,11 +27,16 @@ export interface Course {
   notes?: string;
 }
 
-/** Assignments (מטלות) — ממן/ממח homework. §2.2. `courseId` is undefined for unfiled inbox items. */
+/**
+ * Assignments (מטלות) — every task is a ממ״נ (MAMAN, 11–19) or ממ״ח (MAMACH, 21–29)
+ * tied to a course. `name` is auto-generated from `type` + `taskNumber` (e.g. `ממ״נ 11`).
+ */
 export interface Assignment {
   id: string;
   name: string;
-  courseId?: string;
+  courseId: string;
+  type: AssignmentType;
+  taskNumber: number;
   status: AssignmentStatus;
   dueDate?: string;
   materialIds: string[];

@@ -1,13 +1,15 @@
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { Box } from '@/components/ui/box';
 import { Radius, Spacing } from '@/constants/theme';
 import { rtlFlexDirection } from '@/utils/rtl';
 
 export interface Segment {
   label: string;
   value: number;
-  color: string;
+  /** Tailwind background-color token, e.g. `bg-success`. */
+  colorClassName: string;
 }
 
 /**
@@ -24,16 +26,13 @@ export function SegmentedBar({ segments, height = Spacing.three }: { segments: S
           segments
             .filter((segment) => segment.value > 0)
             .map((segment) => (
-              <View
-                key={segment.label}
-                style={{ flexGrow: segment.value, backgroundColor: segment.color }}
-              />
+              <Box key={segment.label} className={segment.colorClassName} style={{ flexGrow: segment.value }} />
             ))}
       </View>
       <View style={styles.legend}>
         {segments.map((segment) => (
           <View key={segment.label} style={styles.legendItem}>
-            <View style={[styles.dot, { backgroundColor: segment.color }]} />
+            <Box className={segment.colorClassName} style={styles.dot} />
             <ThemedText type="small" themeColor="textSecondary">
               {segment.label} {segment.value}
             </ThemedText>

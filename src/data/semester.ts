@@ -1,0 +1,37 @@
+import type { Course, CourseStatus, Semester } from './types';
+
+type SemesterFields = Pick<Course, 'year' | 'semester' | 'grade'>;
+
+/**
+ * Open University semester calendar (confirmed with the user):
+ *   א (Autumn) — Nov–Feb
+ *   ב (Spring) — Mar–Jun
+ *   ג (Summer) — Jul–Oct
+ * The academic `year` is the calendar year the term starts in — matches how
+ * `seed.ts` already labels `year` (e.g. Nov 2026–Feb 2027 is `{ year: 2026, term: 'א' }`).
+ */
+
+export interface CurrentSemester {
+  year: number;
+  term: Semester;
+}
+
+export function getCurrentSemester(now: Date = new Date()): CurrentSemester {
+  const month = now.getMonth() + 1; // 1-12
+  const calendarYear = now.getFullYear();
+
+  if (month >= 11) return { year: calendarYear, term: 'א' };
+  if (month <= 2) return { year: calendarYear - 1, term: 'א' };
+  if (month <= 6) return { year: calendarYear, term: 'ב' };
+  return { year: calendarYear, term: 'ג' };
+}
+
+export function isCurrentSemester(course: SemesterFields, current: CurrentSemester): boolean {
+  return course.year === current.year && course.semester === current.term;
+}
+
+export function deriveCourseStatus(course: SemesterFields, current: CurrentSemester): CourseStatus {
+  if (course.grade !== undefined) return 'passed';
+  if (isCurrentSemester(course, current)) return 'studying';
+  return 'planned';
+}

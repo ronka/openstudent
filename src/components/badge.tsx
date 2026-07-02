@@ -1,27 +1,34 @@
 import { StyleSheet } from 'react-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { Box } from '@/components/ui/box';
+import { Text } from '@/components/ui/text';
 import { Spacing } from '@/constants/theme';
 
 export type BadgeTone = 'neutral' | 'info' | 'success' | 'warning';
 
-const TONE_COLORS: Record<BadgeTone, { background: string; text: string }> = {
-  neutral: { background: '#E0E1E6', text: '#3C3C43' },
-  info: { background: '#DCEBFF', text: '#1D4ED8' },
-  success: { background: '#DCFCE7', text: '#15803D' },
-  warning: { background: '#FEF3C7', text: '#B45309' },
+/** Tone -> gluestack background token. Shared with other tone-driven visuals (e.g. the
+ * dashboard's assignment-status bar) so every "status color" in the app stays in sync. */
+export const TONE_BACKGROUND_CLASSNAMES: Record<BadgeTone, string> = {
+  neutral: 'bg-muted',
+  info: 'bg-info',
+  success: 'bg-success',
+  warning: 'bg-warning',
+};
+
+const TONE_TEXT_CLASSNAMES: Record<BadgeTone, string> = {
+  neutral: 'text-muted-foreground',
+  info: 'text-info-foreground',
+  success: 'text-success-foreground',
+  warning: 'text-warning-foreground',
 };
 
 export function Badge({ label, tone = 'neutral' }: { label: string; tone?: BadgeTone }) {
-  const colors = TONE_COLORS[tone];
-
   return (
-    <ThemedView style={[styles.container, { backgroundColor: colors.background }]}>
-      <ThemedText type="smallBold" style={[styles.text, { color: colors.text }]}>
+    <Box className={TONE_BACKGROUND_CLASSNAMES[tone]} style={styles.container}>
+      <Text className={TONE_TEXT_CLASSNAMES[tone]} style={styles.text}>
         {label}
-      </ThemedText>
-    </ThemedView>
+      </Text>
+    </Box>
   );
 }
 
@@ -35,5 +42,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 12,
     lineHeight: 16,
+    fontWeight: '700',
   },
 });

@@ -26,8 +26,18 @@ function createCollection<T extends { id: string }>(initial: T[]) {
     items = [...items, item];
     notify();
   }
+  /** Add several items as a single update (one snapshot change, one notify). */
+  function addMany(newItems: T[]) {
+    if (newItems.length === 0) return;
+    items = [...items, ...newItems];
+    notify();
+  }
   function update(id: string, patch: Partial<T>) {
     items = items.map((item) => (item.id === id ? { ...item, ...patch } : item));
+    notify();
+  }
+  function remove(id: string) {
+    items = items.filter((item) => item.id !== id);
     notify();
   }
   function reset() {
@@ -35,7 +45,7 @@ function createCollection<T extends { id: string }>(initial: T[]) {
     notify();
   }
 
-  return { getSnapshot, subscribe, add, update, reset };
+  return { getSnapshot, subscribe, add, addMany, update, remove, reset };
 }
 
 export const coursesCollection = createCollection<Course>(seedCourses);
@@ -67,6 +77,11 @@ export function useMaterials(): Material[] {
 export function useCourse(id: string | undefined): Course | undefined {
   const courses = useCourses();
   return courses.find((course) => course.id === id);
+}
+
+export function useAssignment(id: string | undefined): Assignment | undefined {
+  const assignments = useAssignments();
+  return assignments.find((assignment) => assignment.id === id);
 }
 
 export function useAssignmentsByCourse(courseId: string | undefined): Assignment[] {

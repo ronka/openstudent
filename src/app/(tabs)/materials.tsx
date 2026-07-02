@@ -2,6 +2,7 @@ import { Link } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { CaptureFab } from '@/components/capture-fab';
 import { FilterChip } from '@/components/filter-chip';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -132,6 +133,8 @@ export default function MaterialsScreen() {
           </ThemedText>
         }
       />
+
+      <CaptureFab />
     </ThemedView>
   );
 }

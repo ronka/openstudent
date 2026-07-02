@@ -2,6 +2,7 @@ import Constants from 'expo-constants';
 import { useCallback, useEffect, useRef } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet } from 'react-native';
 
+import { CaptureFab } from '@/components/capture-fab';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -60,17 +61,20 @@ export default function SettingsScreen() {
   }, [showDebugOptions]);
 
   return (
-    <ScrollView
-      contentContainerStyle={[styles.content, screenPadding]}>
-      <Pressable onPress={handleAppDetailsPress}>
-        <ThemedView type="backgroundElement" style={styles.row}>
-          <ThemedText style={styles.rowTitle}>פרטי האפליקציה</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.rowTitle}>
-            גרסה {appVersion}
-          </ThemedText>
-        </ThemedView>
-      </Pressable>
-    </ScrollView>
+    <>
+      <ScrollView contentContainerStyle={[styles.content, screenPadding]}>
+        <Pressable onPress={handleAppDetailsPress}>
+          <ThemedView type="backgroundElement" style={styles.row}>
+            <ThemedText style={styles.rowTitle}>פרטי האפליקציה</ThemedText>
+            <ThemedText type="small" themeColor="textSecondary" style={styles.rowTitle}>
+              גרסה {appVersion}
+            </ThemedText>
+          </ThemedView>
+        </Pressable>
+      </ScrollView>
+
+      <CaptureFab />
+    </>
   );
 }
 

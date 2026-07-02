@@ -7,32 +7,29 @@ import '@/global.css';
 
 import { Platform } from 'react-native';
 
-export const Colors = {
-  light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-    accent: '#4F46E5',
-    accentSoft: '#EEF0FF',
-    card: '#FFFFFF',
-    border: '#E5E7EB',
-  },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-    accent: '#818CF8',
-    accentSoft: '#2A2A45',
-    card: '#1A1B1E',
-    border: '#2E3135',
-  },
-} as const;
+/** Keys accepted by `ThemedView`/`ThemedText`'s `type`/`themeColor` props, mapped to
+ * gluestack/shadcn className tokens inside those components. */
+export type ThemeColor =
+  | 'text'
+  | 'background'
+  | 'backgroundElement'
+  | 'backgroundSelected'
+  | 'textSecondary'
+  | 'accent'
+  | 'accentSoft'
+  | 'card'
+  | 'border';
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+/**
+ * Resolved color values for native chrome that can't be styled via NativeWind
+ * `className` (native tab bar config, `SymbolView`'s `tintColor`). Mirrors the
+ * `--background` / `--secondary` / `--foreground` tokens in `global.css` - keep both
+ * in sync when the palette changes.
+ */
+export const NativeChromeColors = {
+  light: { background: 'rgb(255, 255, 255)', backgroundElement: 'rgb(245, 245, 245)', text: 'rgb(10, 10, 10)' },
+  dark: { background: 'rgb(10, 10, 10)', backgroundElement: 'rgb(38, 38, 38)', text: 'rgb(250, 250, 250)' },
+} as const;
 
 export const Fonts = Platform.select({
   ios: {

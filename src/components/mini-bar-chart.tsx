@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
+import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { rtlFlexDirection } from '@/utils/rtl';
 
 export interface BarPoint {
@@ -25,22 +25,15 @@ export function MiniBarChart({
   max?: number;
   height?: number;
 }) {
-  const theme = useTheme();
-
   return (
     <View style={[styles.container, { height }]}>
       {data.map((point) => {
         const ratio = max > 0 ? Math.max(0, Math.min(1, point.value / max)) : 0;
         return (
-          <View
+          <ThemedView
             key={point.key}
-            style={[
-              styles.bar,
-              {
-                height: `${Math.max(ratio * 100, 6)}%`,
-                backgroundColor: theme.accent,
-              },
-            ]}
+            type="accent"
+            style={[styles.bar, { height: `${Math.max(ratio * 100, 6)}%` }]}
           />
         );
       })}

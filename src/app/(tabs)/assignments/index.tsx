@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, View } from 'react-native';
 
-import { Badge } from '@/components/badge';
+import { AssignmentFormModal } from '@/components/assignment-form-modal';
+import { Fab } from '@/components/capture-fab';
 import { EntityRow } from '@/components/entity-row';
 import { FilterChip } from '@/components/filter-chip';
+import { TaskCheckbox } from '@/components/task-checkbox';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { ASSIGNMENT_STATUS_LABELS, ASSIGNMENT_STATUS_TONES, ASSIGNMENT_STATUSES } from '@/data/constants';
-import { useAssignments, useCourses } from '@/data/store';
+import { ASSIGNMENT_STATUS_LABELS, ASSIGNMENT_STATUSES } from '@/data/constants';
+import { assignmentsCollection, useAssignments, useCourses } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import type { Assignment, AssignmentStatus } from '@/data/types';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
@@ -16,17 +18,18 @@ import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 type StatusFilter = 'all' | AssignmentStatus;
 
 function AssignmentRow({ assignment, courseName }: { assignment: Assignment; courseName?: string }) {
+  const checked = assignment.status === 'done';
   return (
     <EntityRow
       title={assignment.name}
       subtitle={[courseName, assignment.dueDate].filter(Boolean).join(' · ')}
-      trailing={
-        <Badge
-          label={ASSIGNMENT_STATUS_LABELS[assignment.status]}
-          tone={ASSIGNMENT_STATUS_TONES[assignment.status]}
+      leading={
+        <TaskCheckbox
+          checked={checked}
+          onToggle={() => assignmentsCollection.update(assignment.id, { status: checked ? 'todo' : 'done' })}
         />
       }
-      href={assignment.courseId ? `/courses/${assignment.courseId}` : undefined}
+      href={`/assignments/${assignment.id}`}
     />
   );
 }
@@ -38,6 +41,7 @@ export default function AssignmentsScreen() {
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [courseFilter, setCourseFilter] = useState<'all' | string>('all');
+  const [showForm, setShowForm] = useState(false);
 
   const courseNameById = useMemo(() => new Map(courses.map((course) => [course.id, course.name])), [courses]);
 
@@ -99,6 +103,9 @@ export default function AssignmentsScreen() {
           </ThemedText>
         }
       />
+
+      <Fab onPress={() => setShowForm(true)} />
+      <AssignmentFormModal visible={showForm} onClose={() => setShowForm(false)} />
     </ThemedView>
   );
 }

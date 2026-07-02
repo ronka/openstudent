@@ -1,9 +1,9 @@
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 import { ProgressBar } from '@/components/progress-bar';
 import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { rtlTextAlign } from '@/utils/rtl';
 
 /**
@@ -21,14 +21,8 @@ export function StatCard({
   caption?: string;
   progress?: number;
 }) {
-  const theme = useTheme();
-
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: theme.card, borderColor: theme.border },
-      ]}>
+    <ThemedView type="card" className="border-border" style={styles.card}>
       <ThemedText type="subtitle" themeColor="accent" style={styles.value}>
         {value}
       </ThemedText>
@@ -41,7 +35,7 @@ export function StatCard({
         </ThemedText>
       )}
       {progress !== undefined && <ProgressBar value={progress} />}
-    </View>
+    </ThemedView>
   );
 }
 

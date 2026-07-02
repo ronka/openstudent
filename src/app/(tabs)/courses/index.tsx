@@ -1,17 +1,23 @@
 import { Link } from 'expo-router';
+import { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { Badge } from '@/components/badge';
+import { Fab } from '@/components/capture-fab';
+import { CourseCatalogPicker } from '@/components/course-catalog-picker';
+import { QuickTasksModal } from '@/components/quick-tasks-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { COURSE_STATUS_LABELS, COURSE_STATUS_TONES } from '@/data/constants';
+import { deriveCourseStatus, getCurrentSemester } from '@/data/semester';
 import { useCourses } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import type { Course } from '@/data/types';
 import { rtlFlexDirection, rtlMargin, rtlTextAlign } from '@/utils/rtl';
 
-function CourseRow({ course }: { course: Course }) {
+function CourseRow({ course, current }: { course: Course; current: ReturnType<typeof getCurrentSemester> }) {
+  const status = deriveCourseStatus(course, current);
   return (
     <Link href={{ pathname: '/courses/[id]', params: { id: course.id } }} asChild>
       <Pressable style={({ pressed }) => pressed && styles.rowPressed}>
@@ -36,7 +42,7 @@ function CourseRow({ course }: { course: Course }) {
               )}
             </View>
           </View>
-          <Badge label={COURSE_STATUS_LABELS[course.status]} tone={COURSE_STATUS_TONES[course.status]} />
+          <Badge label={COURSE_STATUS_LABELS[status]} tone={COURSE_STATUS_TONES[status]} />
         </ThemedView>
       </Pressable>
     </Link>
@@ -46,18 +52,42 @@ function CourseRow({ course }: { course: Course }) {
 export default function CoursesScreen() {
   const courses = useCourses();
   const screenPadding = useScreenPadding();
+  const current = useMemo(() => getCurrentSemester(), []);
+
+  const [showCatalogPicker, setShowCatalogPicker] = useState(false);
+  const [quickTasksQueue, setQuickTasksQueue] = useState<{ id: string; name: string }[]>([]);
+  const quickTasksFor = quickTasksQueue[0];
 
   return (
     <ThemedView style={styles.container}>
       <FlatList
         data={courses}
         keyExtractor={(course) => course.id}
-        renderItem={({ item }) => <CourseRow course={item} />}
+        renderItem={({ item }) => <CourseRow course={item} current={current} />}
         contentContainerStyle={[
           styles.listContent,
           { paddingBottom: screenPadding.paddingBottom },
         ]}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
+      />
+
+      <Fab onPress={() => setShowCatalogPicker(true)} />
+
+      <CourseCatalogPicker
+        visible={showCatalogPicker}
+        onClose={() => setShowCatalogPicker(false)}
+        onAdded={(created) => {
+          setShowCatalogPicker(false);
+          setQuickTasksQueue(created);
+        }}
+      />
+
+      <QuickTasksModal
+        key={quickTasksFor?.id}
+        visible={quickTasksFor !== undefined}
+        courseId={quickTasksFor?.id ?? ''}
+        courseName={quickTasksFor?.name ?? ''}
+        onClose={() => setQuickTasksQueue((prev) => prev.slice(1))}
       />
     </ThemedView>
   );

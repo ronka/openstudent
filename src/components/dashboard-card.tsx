@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 /**
@@ -23,10 +23,8 @@ export function DashboardCard({
   href?: string;
   children: ReactNode;
 }) {
-  const theme = useTheme();
-
   const content = (
-    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+    <ThemedView type="card" className="border-border" style={styles.card}>
       {title && (
         <View style={styles.header}>
           <ThemedText type="smallBold" style={styles.title}>
@@ -36,7 +34,7 @@ export function DashboardCard({
         </View>
       )}
       {children}
-    </View>
+    </ThemedView>
   );
 
   if (!href) return content;

@@ -10,16 +10,19 @@ import { rtlFlexDirection, rtlMargin, rtlTextAlign } from '@/utils/rtl';
 export function EntityRow({
   title,
   subtitle,
+  leading,
   trailing,
   href,
 }: {
   title: string;
   subtitle?: string;
+  leading?: ReactNode;
   trailing?: ReactNode;
   href?: string;
 }) {
   const content = (
     <ThemedView type="backgroundElement" style={styles.row}>
+      {leading && <View style={styles.leading}>{leading}</View>}
       <View style={styles.main}>
         <ThemedText style={styles.title}>{title}</ThemedText>
         {subtitle && (
@@ -48,6 +51,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderRadius: Spacing.three,
     padding: Spacing.three,
+  },
+  leading: {
+    ...rtlMargin.marginEnd(Spacing.three),
   },
   main: {
     flex: 1,
