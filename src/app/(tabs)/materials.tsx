@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { CaptureFab } from '@/components/capture-fab';
+import { CourseFilterChip } from '@/components/course-select-modal';
 import { FilterChip } from '@/components/filter-chip';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -99,17 +100,14 @@ export default function MaterialsScreen() {
             <FilterChip key={tag} label={tag} selected={tagFilter === tag} onPress={() => setTagFilter(tag)} />
           ))}
         </ScrollView>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-          <FilterChip label="כל הקורסים" selected={courseFilter === 'all'} onPress={() => setCourseFilter('all')} />
-          {filterableCourses.map((course) => (
-            <FilterChip
-              key={course.id}
-              label={course.name}
-              selected={courseFilter === course.id}
-              onPress={() => setCourseFilter(course.id)}
-            />
-          ))}
-        </ScrollView>
+        <View style={styles.chipRow}>
+          <CourseFilterChip
+            courses={filterableCourses}
+            selectedCourseId={courseFilter === 'all' ? undefined : courseFilter}
+            onChange={(id) => setCourseFilter(id ?? 'all')}
+            clearLabel="כל הקורסים"
+          />
+        </View>
       </View>
 
       <FlatList

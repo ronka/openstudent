@@ -12,7 +12,7 @@ import { SEMESTERS } from '@/data/constants';
 import { deriveCourseStatus, getCurrentSemester } from '@/data/semester';
 import { coursesCollection, useCourses } from '@/data/store';
 import type { Course, Semester } from '@/data/types';
-import { rtlFlexDirection, rtlMargin, rtlTextAlign } from '@/utils/rtl';
+import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 export function CourseCatalogPicker({
   visible,
@@ -93,9 +93,7 @@ export function CourseCatalogPicker({
             return (
               <Pressable key={entry.courseNumber} onPress={() => toggle(entry)} disabled={enrolled}>
                 <ThemedView type="backgroundElement" style={[styles.row, enrolled && styles.rowDisabled]}>
-                  <View style={styles.checkboxWrap}>
-                    <TaskCheckbox checked={checked} onToggle={() => toggle(entry)} />
-                  </View>
+                  <TaskCheckbox checked={checked} onToggle={() => toggle(entry)} />
                   <View style={styles.rowMain}>
                     <ThemedText style={styles.rowTitle}>{entry.name}</ThemedText>
                     <ThemedText type="small" themeColor="textSecondary">
@@ -155,14 +153,12 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: rtlFlexDirection.row,
     alignItems: 'center',
+    gap: Spacing.three,
     borderRadius: Spacing.three,
     padding: Spacing.three,
   },
   rowDisabled: {
     opacity: 0.5,
-  },
-  checkboxWrap: {
-    ...rtlMargin.marginEnd(Spacing.three),
   },
   rowMain: {
     flex: 1,

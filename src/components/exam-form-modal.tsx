@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet } from 'react-native';
 
+import { CourseSelectField } from '@/components/course-select-modal';
 import { DateField } from '@/components/date-field';
-import { ChipField, TextField } from '@/components/form-fields';
+import { TextField } from '@/components/form-fields';
 import { FormSheet, SheetButton } from '@/components/form-sheet';
 import { Spacing } from '@/constants/theme';
 import { examsCollection, useCourses } from '@/data/store';
@@ -104,15 +105,7 @@ export function ExamFormModal({
     <FormSheet visible={visible} onClose={onClose} title={exam ? 'עריכת מבחן' : 'מבחן חדש'}>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.body}>
         <TextField label="כותרת" value={title} onChangeText={setTitle} placeholder="מבחן סופי" />
-        <ChipField
-          label="קורס"
-          scroll
-          options={courses}
-          getKey={(course) => course.id}
-          getLabel={(course) => course.name}
-          isSelected={(course) => courseId === course.id}
-          onSelect={(course) => setCourseId(course.id)}
-        />
+        <CourseSelectField label="קורס" courses={courses} selectedCourseId={courseId || undefined} onSelect={setCourseId} />
         <DateField label="תאריך" value={date || undefined} onChange={setDate} />
         <TextField
           label="ציון (אופציונלי)"

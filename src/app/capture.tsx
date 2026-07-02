@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { FilterChip } from '@/components/filter-chip';
+import { CourseFilterChip, CourseSelectModal } from '@/components/course-select-modal';
 import { ThemedTextInput } from '@/components/form-fields';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -19,7 +19,7 @@ export default function CaptureScreen() {
 
   const [name, setName] = useState('');
   const [selectedCourseId, setSelectedCourseId] = useState<string | undefined>(undefined);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [filingMaterialId, setFilingMaterialId] = useState<string | null>(null);
 
   const inboxMaterials = useMemo(
     () => materials.filter((material) => !material.courseId),
@@ -45,7 +45,7 @@ export default function CaptureScreen() {
 
   function fileToCourse(materialId: string, courseId: string) {
     materialsCollection.update(materialId, { courseId });
-    setExpandedId(null);
+    setFilingMaterialId(null);
   }
 
   return (
@@ -53,21 +53,14 @@ export default function CaptureScreen() {
       <View style={styles.section}>
         <ThemedTextInput value={name} onChangeText={setName} placeholder="שם החומר" />
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-          <FilterChip
-            label="ללא שיוך"
-            selected={selectedCourseId === undefined}
-            onPress={() => setSelectedCourseId(undefined)}
+        <View style={styles.chipRow}>
+          <CourseFilterChip
+            courses={courses}
+            selectedCourseId={selectedCourseId}
+            onChange={setSelectedCourseId}
+            clearLabel="ללא שיוך"
           />
-          {courses.map((course) => (
-            <FilterChip
-              key={course.id}
-              label={course.name}
-              selected={selectedCourseId === course.id}
-              onPress={() => setSelectedCourseId(course.id)}
-            />
-          ))}
-        </ScrollView>
+        </View>
 
         <ThemedView type={name.trim() ? 'text' : 'backgroundElement'} style={styles.addButton}>
           <ThemedText
@@ -89,43 +82,31 @@ export default function CaptureScreen() {
             אין פריטים לא משויכים
           </ThemedText>
         ) : (
-          inboxMaterials.map((material) => {
-            const isExpanded = expandedId === material.id;
-            return (
-              <ThemedView key={material.id} type="backgroundElement" style={styles.inboxRow}>
-                <View style={styles.inboxRowMain}>
-                  <ThemedText style={styles.rowTitle}>{material.name}</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    חומר
-                  </ThemedText>
-                </View>
-                <ThemedText
-                  type="linkPrimary"
-                  onPress={() => setExpandedId(isExpanded ? null : material.id)}>
-                  שייך לקורס
+          inboxMaterials.map((material) => (
+            <ThemedView key={material.id} type="backgroundElement" style={styles.inboxRow}>
+              <View style={styles.inboxRowMain}>
+                <ThemedText style={styles.rowTitle}>{material.name}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  חומר
                 </ThemedText>
-
-                {isExpanded && (
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.coursePicker}
-                    contentContainerStyle={styles.chipRow}>
-                    {courses.map((course) => (
-                      <FilterChip
-                        key={course.id}
-                        label={course.name}
-                        selected={false}
-                        onPress={() => fileToCourse(material.id, course.id)}
-                      />
-                    ))}
-                  </ScrollView>
-                )}
-              </ThemedView>
-            );
-          })
+              </View>
+              <ThemedText type="linkPrimary" onPress={() => setFilingMaterialId(material.id)}>
+                שייך לקורס
+              </ThemedText>
+            </ThemedView>
+          ))
         )}
       </View>
+
+      <CourseSelectModal
+        visible={filingMaterialId !== null}
+        onClose={() => setFilingMaterialId(null)}
+        courses={courses}
+        title="שיוך לקורס"
+        onSelect={(courseId) => {
+          if (filingMaterialId) fileToCourse(filingMaterialId, courseId);
+        }}
+      />
     </ScrollView>
   );
 }
@@ -163,8 +144,5 @@ const styles = StyleSheet.create({
   },
   rowTitle: {
     textAlign: rtlTextAlign.start,
-  },
-  coursePicker: {
-    marginTop: Spacing.one,
   },
 });

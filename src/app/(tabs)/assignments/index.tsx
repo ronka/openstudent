@@ -3,6 +3,7 @@ import { FlatList, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AssignmentFormModal } from '@/components/assignment-form-modal';
 import { Fab } from '@/components/capture-fab';
+import { CourseFilterChip } from '@/components/course-select-modal';
 import { EntityRow } from '@/components/entity-row';
 import { FilterChip } from '@/components/filter-chip';
 import { TaskCheckbox } from '@/components/task-checkbox';
@@ -73,17 +74,14 @@ export default function AssignmentsScreen() {
             />
           ))}
         </ScrollView>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-          <FilterChip label="כל הקורסים" selected={courseFilter === 'all'} onPress={() => setCourseFilter('all')} />
-          {filterableCourses.map((course) => (
-            <FilterChip
-              key={course.id}
-              label={course.name}
-              selected={courseFilter === course.id}
-              onPress={() => setCourseFilter(course.id)}
-            />
-          ))}
-        </ScrollView>
+        <View style={styles.chipRow}>
+          <CourseFilterChip
+            courses={filterableCourses}
+            selectedCourseId={courseFilter === 'all' ? undefined : courseFilter}
+            onChange={(id) => setCourseFilter(id ?? 'all')}
+            clearLabel="כל הקורסים"
+          />
+        </View>
       </View>
 
       <FlatList

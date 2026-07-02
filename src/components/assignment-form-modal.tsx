@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet } from 'react-native';
 
+import { CourseSelectField } from '@/components/course-select-modal';
 import { DateField } from '@/components/date-field';
 import { ChipField } from '@/components/form-fields';
 import { FormSheet, SheetButton } from '@/components/form-sheet';
@@ -122,14 +123,11 @@ export function AssignmentFormModal({
           isSelected={(n) => taskNumber === n}
           onSelect={setTaskNumber}
         />
-        <ChipField
+        <CourseSelectField
           label="קורס"
-          scroll
-          options={courses}
-          getKey={(course) => course.id}
-          getLabel={(course) => course.name}
-          isSelected={(course) => courseId === course.id}
-          onSelect={(course) => handleCourseChange(course.id)}
+          courses={courses}
+          selectedCourseId={courseId || undefined}
+          onSelect={handleCourseChange}
         />
         <DateField label="תאריך יעד (אופציונלי)" value={dueDate || undefined} onChange={setDueDate} optional />
 
