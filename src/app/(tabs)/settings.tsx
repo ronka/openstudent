@@ -1,18 +1,18 @@
 import Constants from 'expo-constants';
 import { useCallback, useEffect, useRef } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { resetAllData } from '@/data/store';
+import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { getRTLDebugInfo, rtlTextAlign } from '@/utils/rtl';
 
 const UPDATE_VERSION = 1;
 
 export default function SettingsScreen() {
-  const insets = useSafeAreaInsets();
+  const screenPadding = useScreenPadding();
   const appVersion = `${Constants.expoConfig?.version ?? '1.0.0'}-${UPDATE_VERSION}`;
 
   const tapCountRef = useRef(0);
@@ -61,7 +61,7 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + BottomTabInset + Spacing.three }]}>
+      contentContainerStyle={[styles.content, screenPadding]}>
       <Pressable onPress={handleAppDetailsPress}>
         <ThemedView type="backgroundElement" style={styles.row}>
           <ThemedText style={styles.rowTitle}>פרטי האפליקציה</ThemedText>

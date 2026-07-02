@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Badge } from '@/components/badge';
 import { EntityRow } from '@/components/entity-row';
 import { FilterChip } from '@/components/filter-chip';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { ASSIGNMENT_STATUS_LABELS, ASSIGNMENT_STATUS_TONES, ASSIGNMENT_STATUSES } from '@/data/constants';
 import { useAssignments, useCourses } from '@/data/store';
+import { useScreenPadding } from '@/hooks/use-screen-padding';
 import type { Assignment, AssignmentStatus } from '@/data/types';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
@@ -34,7 +34,7 @@ function AssignmentRow({ assignment, courseName }: { assignment: Assignment; cou
 export default function AssignmentsScreen() {
   const assignments = useAssignments();
   const courses = useCourses();
-  const insets = useSafeAreaInsets();
+  const screenPadding = useScreenPadding();
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [courseFilter, setCourseFilter] = useState<'all' | string>('all');
@@ -57,7 +57,7 @@ export default function AssignmentsScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.filters}>
+      <View style={[styles.filters, { paddingTop: screenPadding.paddingTop }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
           <FilterChip label="הכל" selected={statusFilter === 'all'} onPress={() => setStatusFilter('all')} />
           {ASSIGNMENT_STATUSES.map((status) => (
@@ -91,7 +91,7 @@ export default function AssignmentsScreen() {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         contentContainerStyle={[
           styles.listContent,
-          { paddingBottom: insets.bottom + BottomTabInset + Spacing.three },
+          { paddingBottom: screenPadding.paddingBottom },
         ]}
         ListEmptyComponent={
           <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
@@ -109,7 +109,6 @@ const styles = StyleSheet.create({
   },
   filters: {
     gap: Spacing.two,
-    paddingTop: Spacing.three,
     paddingBottom: Spacing.two,
   },
   chipRow: {

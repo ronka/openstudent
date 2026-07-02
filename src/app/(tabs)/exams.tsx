@@ -1,19 +1,19 @@
 import { useMemo } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Badge } from '@/components/badge';
 import { EntityRow } from '@/components/entity-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useCourses, useExams } from '@/data/store';
+import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { rtlTextAlign } from '@/utils/rtl';
 
 export default function ExamsScreen() {
   const exams = useExams();
   const courses = useCourses();
-  const insets = useSafeAreaInsets();
+  const screenPadding = useScreenPadding();
 
   const courseNameById = useMemo(() => new Map(courses.map((course) => [course.id, course.name])), [courses]);
 
@@ -38,7 +38,7 @@ export default function ExamsScreen() {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         contentContainerStyle={[
           styles.listContent,
-          { paddingBottom: insets.bottom + BottomTabInset + Spacing.three },
+          screenPadding,
         ]}
         ListEmptyComponent={
           <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>

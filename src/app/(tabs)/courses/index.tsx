@@ -1,13 +1,13 @@
 import { Link } from 'expo-router';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Badge } from '@/components/badge';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { COURSE_STATUS_LABELS, COURSE_STATUS_TONES } from '@/data/constants';
 import { useCourses } from '@/data/store';
+import { useScreenPadding } from '@/hooks/use-screen-padding';
 import type { Course } from '@/data/types';
 import { rtlFlexDirection, rtlMargin, rtlTextAlign } from '@/utils/rtl';
 
@@ -45,7 +45,7 @@ function CourseRow({ course }: { course: Course }) {
 
 export default function CoursesScreen() {
   const courses = useCourses();
-  const insets = useSafeAreaInsets();
+  const screenPadding = useScreenPadding();
 
   return (
     <ThemedView style={styles.container}>
@@ -55,7 +55,7 @@ export default function CoursesScreen() {
         renderItem={({ item }) => <CourseRow course={item} />}
         contentContainerStyle={[
           styles.listContent,
-          { paddingBottom: insets.bottom + BottomTabInset + Spacing.three },
+          { paddingBottom: screenPadding.paddingBottom },
         ]}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />

@@ -1,20 +1,20 @@
 import { useMemo } from 'react';
 import { SectionList, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Badge } from '@/components/badge';
 import { EntityRow } from '@/components/entity-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { COURSE_STATUS_LABELS, COURSE_STATUS_TONES, SEMESTERS } from '@/data/constants';
 import { useCourses } from '@/data/store';
+import { useScreenPadding } from '@/hooks/use-screen-padding';
 import type { Course, Semester } from '@/data/types';
 import { rtlTextAlign } from '@/utils/rtl';
 
 export default function PlanScreen() {
   const courses = useCourses();
-  const insets = useSafeAreaInsets();
+  const screenPadding = useScreenPadding();
 
   const sections = useMemo(() => {
     const groups = new Map<string, { year: number; semester: Semester | '—'; courses: Course[] }>();
@@ -58,7 +58,7 @@ export default function PlanScreen() {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         contentContainerStyle={[
           styles.listContent,
-          { paddingBottom: insets.bottom + BottomTabInset + Spacing.three },
+          screenPadding,
         ]}
         stickySectionHeadersEnabled={false}
         ListEmptyComponent={

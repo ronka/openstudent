@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
+import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 const FOCUS_DURATION_SECONDS = 25 * 60;
@@ -24,7 +24,7 @@ function formatTime(totalSeconds: number) {
 }
 
 export default function PomodoroScreen() {
-  const insets = useSafeAreaInsets();
+  const screenPadding = useScreenPadding();
   const [secondsLeft, setSecondsLeft] = useState(FOCUS_DURATION_SECONDS);
   const [isRunning, setIsRunning] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -65,7 +65,7 @@ export default function PomodoroScreen() {
 
   return (
     <ScrollView
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + BottomTabInset + Spacing.three }]}>
+      contentContainerStyle={[styles.content, screenPadding]}>
       <View style={styles.timerSection}>
         <ThemedText style={styles.timer}>{formatTime(secondsLeft)}</ThemedText>
 

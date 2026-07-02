@@ -1,13 +1,13 @@
 import { Link } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FilterChip } from '@/components/filter-chip';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useAssignments, useCourses, useMaterials } from '@/data/store';
+import { useScreenPadding } from '@/hooks/use-screen-padding';
 import type { Material } from '@/data/types';
 import { rtlFlexDirection, rtlMargin, rtlTextAlign } from '@/utils/rtl';
 
@@ -58,7 +58,7 @@ export default function MaterialsScreen() {
   const materials = useMaterials();
   const courses = useCourses();
   const assignments = useAssignments();
-  const insets = useSafeAreaInsets();
+  const screenPadding = useScreenPadding();
 
   const [tagFilter, setTagFilter] = useState<'all' | string>('all');
   const [courseFilter, setCourseFilter] = useState<'all' | string>('all');
@@ -91,7 +91,7 @@ export default function MaterialsScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.filters}>
+      <View style={[styles.filters, { paddingTop: screenPadding.paddingTop }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
           <FilterChip label="כל התגיות" selected={tagFilter === 'all'} onPress={() => setTagFilter('all')} />
           {allTags.map((tag) => (
@@ -124,7 +124,7 @@ export default function MaterialsScreen() {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         contentContainerStyle={[
           styles.listContent,
-          { paddingBottom: insets.bottom + BottomTabInset + Spacing.three },
+          { paddingBottom: screenPadding.paddingBottom },
         ]}
         ListEmptyComponent={
           <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
@@ -142,7 +142,6 @@ const styles = StyleSheet.create({
   },
   filters: {
     gap: Spacing.two,
-    paddingTop: Spacing.three,
     paddingBottom: Spacing.two,
   },
   chipRow: {

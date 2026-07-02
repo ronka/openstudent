@@ -25,6 +25,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-localization",
       [
         "expo-splash-screen",
         {
@@ -34,6 +35,10 @@
         }
       ]
     ],
+    "extra": {
+      "supportsRTL": true,
+      "forcesRTL": true
+    },
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
