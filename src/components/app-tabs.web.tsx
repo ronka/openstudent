@@ -33,9 +33,6 @@ export default function AppTabs() {
           <TabTrigger name="exams" href="/exams" asChild>
             <TabButton>מבחנים</TabButton>
           </TabTrigger>
-          <TabTrigger name="materials" href="/materials" asChild>
-            <TabButton>חומרים</TabButton>
-          </TabTrigger>
           <TabTrigger name="plan" href="/plan" asChild>
             <TabButton>תוכנית</TabButton>
           </TabTrigger>

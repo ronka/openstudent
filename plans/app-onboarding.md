@@ -18,6 +18,8 @@ empty-state nudges. Requires making the course catalog standalone and adding a m
 
 ### Task 1: Standalone catalog + clear mock data
 
+Status: done
+
 - **Type**: AFK
 - **Blocked by**: None - can start immediately
 
@@ -32,11 +34,11 @@ See ONBOARDING_PLAN.md §3.1–§3.2.
 
 #### Acceptance criteria
 
-- [ ] `src/data/seed.ts` no longer exists; no file imports it
-- [ ] Fresh app launch shows empty states on every tab (dashboard, plan, exams, materials)
-- [ ] The course catalog picker still lists all 25 courses and adding a course works end-to-end
-- [ ] `resetAllData()` empties all collections instead of restoring seed rows
-- [ ] Lint and type-check pass
+- [x] `src/data/seed.ts` no longer exists; no file imports it
+- [x] Fresh app launch shows empty states on every tab (dashboard, plan, exams, materials)
+- [x] The course catalog picker still lists all 25 courses and adding a course works end-to-end
+- [x] `resetAllData()` empties all collections instead of restoring seed rows
+- [x] Lint and type-check pass
 
 #### User stories addressed
 
@@ -45,6 +47,8 @@ See ONBOARDING_PLAN.md §3.1–§3.2.
 ---
 
 ### Task 2: Persistence layer (kv-store + onboarding flag)
+
+Status: done
 
 - **Type**: AFK
 - **Blocked by**: Task 1
@@ -62,11 +66,11 @@ guard with a localStorage fallback if needed. See ONBOARDING_PLAN.md §3.3–§3
 
 #### Acceptance criteria
 
-- [ ] Adding a course/assignment/exam, killing the app, and relaunching shows the same data
-- [ ] `resetAllData()` clears the persisted snapshots too (not just memory)
-- [ ] `onboarding.ts` flag survives restart and is readable synchronously at startup
-- [ ] No changes required in any screen/component call site
-- [ ] Works on iOS and web (native path or documented fallback)
+- [x] Adding a course/assignment/exam, killing the app, and relaunching shows the same data
+- [x] `resetAllData()` clears the persisted snapshots too (not just memory)
+- [x] `onboarding.ts` flag survives restart and is readable synchronously at startup
+- [x] No changes required in any screen/component call site
+- [x] Works on iOS and web (native path or documented fallback)
 
 #### User stories addressed
 
@@ -75,6 +79,8 @@ guard with a localStorage fallback if needed. See ONBOARDING_PLAN.md §3.3–§3
 ---
 
 ### Task 3: Onboarding gate + intro screens (1–3)
+
+Status: done
 
 - **Type**: AFK
 - **Blocked by**: Task 2
@@ -92,11 +98,11 @@ tokens only, RTL utilities, progress dots top-center.
 
 #### Acceptance criteria
 
-- [ ] Fresh install (or cleared flag) lands on onboarding, not tabs; no flash of tabs
-- [ ] Question requires a selection before continuing; reflection copy matches the chosen answer
-- [ ] Finishing lands in `(tabs)`; relaunching the app skips onboarding entirely
-- [ ] Screens render correctly in RTL with theme colors in light and dark mode
-- [ ] Progress dots reflect the current step
+- [x] Fresh install (or cleared flag) lands on onboarding, not tabs; no flash of tabs
+- [x] Question requires a selection before continuing; reflection copy matches the chosen answer
+- [x] Finishing lands in `(tabs)`; relaunching the app skips onboarding entirely
+- [x] Screens render correctly in RTL with theme colors in light and dark mode
+- [x] Progress dots reflect the current step
 
 #### User stories addressed
 
@@ -106,6 +112,8 @@ tokens only, RTL utilities, progress dots top-center.
 ---
 
 ### Task 4: Course-selection step (screen 4)
+
+Status: done
 
 - **Type**: AFK
 - **Blocked by**: Task 3
@@ -122,11 +130,11 @@ year/semester. See ONBOARDING_PLAN.md §4 screen 4.
 
 #### Acceptance criteria
 
-- [ ] Selected courses are created with the detected (or edited) semester/year and status `studying`
-- [ ] After finishing onboarding, the dashboard "הסמסטר הנוכחי" card lists the chosen courses
-- [ ] Already-enrolled courses show checked/disabled when re-entering the step
-- [ ] Continue is disabled with 0 selected; the escape link still allows completing onboarding
-- [ ] `CourseCatalogPicker` modal (used in-app) still works unchanged
+- [x] Selected courses are created with the detected (or edited) semester/year and status `studying`
+- [x] After finishing onboarding, the dashboard "הסמסטר הנוכחי" card lists the chosen courses
+- [x] Already-enrolled courses show checked/disabled when re-entering the step
+- [x] Continue is disabled with 0 selected; the escape link still allows completing onboarding
+- [x] `CourseCatalogPicker` modal (used in-app) still works unchanged
 
 #### User stories addressed
 
@@ -135,6 +143,8 @@ year/semester. See ONBOARDING_PLAN.md §4 screen 4.
 ---
 
 ### Task 5: Per-course tasks + exam loop (screen 5)
+
+Status: done
 
 - **Type**: AFK
 - **Blocked by**: Task 4
@@ -151,11 +161,11 @@ is set. See ONBOARDING_PLAN.md §4 screen 5.
 
 #### Acceptance criteria
 
-- [ ] Each selected course gets its own sub-screen with correct `קורס i/N` progress
-- [ ] Created tasks and exams appear on the dashboard (משימות TODO, מבחנים קרבים) after finishing
-- [ ] Skipping a course creates nothing for it and advances the loop
-- [ ] Empty due dates default to 30 days out, matching `QuickTasksModal` behavior
-- [ ] `QuickTasksModal` (used in-app after adding courses) still works unchanged
+- [x] Each selected course gets its own sub-screen with correct `קורס i/N` progress
+- [x] Created tasks and exams appear on the dashboard (משימות TODO, מבחנים קרבים) after finishing
+- [x] Skipping a course creates nothing for it and advances the loop
+- [x] Empty due dates default to 30 days out, matching `QuickTasksModal` behavior
+- [x] `QuickTasksModal` (used in-app after adding courses) still works unchanged
 
 #### User stories addressed
 
@@ -164,6 +174,8 @@ is set. See ONBOARDING_PLAN.md §4 screen 5.
 ---
 
 ### Task 6: Summary screen (screen 6) + empty-state variant
+
+Status: done
 
 - **Type**: AFK
 - **Blocked by**: Task 5
@@ -179,11 +191,11 @@ complete and routes to tabs. Add the `מתחילים נקי 🌱` empty-state va
 
 #### Acceptance criteria
 
-- [ ] Summary counts match exactly what was created during this onboarding run
-- [ ] Nearest-deadline line shows the earliest due date, and is hidden when no tasks exist
-- [ ] Mirrored motivation line matches the screen-2 selection
-- [ ] "אין לי קורסים" path shows the empty-state variant and still completes onboarding
-- [ ] `לדשבורד` sets the flag and lands on a dashboard showing the created data
+- [x] Summary counts match exactly what was created during this onboarding run
+- [x] Nearest-deadline line shows the earliest due date, and is hidden when no tasks exist
+- [x] Mirrored motivation line matches the screen-2 selection
+- [x] "אין לי קורסים" path shows the empty-state variant and still completes onboarding
+- [x] `לדשבורד` sets the flag and lands on a dashboard showing the created data
 
 #### User stories addressed
 
@@ -193,6 +205,8 @@ complete and routes to tabs. Add the `מתחילים נקי 🌱` empty-state va
 ---
 
 ### Task 7: Post-onboarding polish (nudges + debug reset)
+
+Status: done
 
 - **Type**: AFK
 - **Blocked by**: Task 3
@@ -208,10 +222,10 @@ shows `הוסיפו קורסים שעברת כדי לראות התקדמות` in
 
 #### Acceptance criteria
 
-- [ ] Plan screen shows the backfill nudge only when no past courses exist; tapping opens the picker
-- [ ] Dashboard degree card shows the nudge caption instead of `0%` with no passed courses
-- [ ] Debug reset clears all data and the flag, and immediately re-enters onboarding
-- [ ] Adding a past course with a grade makes degree progress and GPA appear
+- [x] Plan screen shows the backfill nudge only when no past courses exist; tapping opens the picker
+- [x] Dashboard degree card shows the nudge caption instead of `0%` with no passed courses
+- [x] Debug reset clears all data and the flag, and immediately re-enters onboarding
+- [x] Adding a past course with a grade makes degree progress and GPA appear
 
 #### User stories addressed
 

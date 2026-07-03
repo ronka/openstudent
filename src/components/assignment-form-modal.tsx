@@ -94,7 +94,6 @@ export function AssignmentFormModal({
       taskNumber,
       status: assignment?.status ?? 'todo',
       dueDate: dueDate.trim() || undefined,
-      materialIds: assignment?.materialIds ?? [],
     };
 
     if (assignment) {

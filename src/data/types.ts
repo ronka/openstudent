@@ -39,7 +39,6 @@ export interface Assignment {
   taskNumber: number;
   status: AssignmentStatus;
   dueDate?: string;
-  materialIds: string[];
 }
 
 /** Exams (רשימת מבחנים) — exam dates and grades. §2.3 */
@@ -49,24 +48,6 @@ export interface Exam {
   courseId: string;
   date: string;
   grade?: number;
-}
-
-/** Recordings (מעקב הקלטות) — last watched lecture per course. §2.4 */
-export interface Recording {
-  id: string;
-  name: string;
-  recordingNumber: number;
-  courseId: string;
-}
-
-/** Materials (חומרים) — study resources. §2.5. `courseId` is undefined for unfiled inbox items. */
-export interface Material {
-  id: string;
-  name: string;
-  courseId?: string;
-  assignmentIds: string[];
-  tags: string[];
-  createdAt: string;
 }
 
 /**

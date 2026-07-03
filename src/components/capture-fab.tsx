@@ -1,4 +1,3 @@
-import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -21,16 +20,6 @@ export function Fab({ onPress }: { onPress: () => void }) {
       </ThemedView>
     </Pressable>
   );
-}
-
-/**
- * FAB that opens the quick-capture screen. Mounted directly by the tabs that
- * want it; the courses and assignments tabs mount their own `Fab` instead
- * (opening their typed create forms), so there's nothing to coordinate here.
- */
-export function CaptureFab() {
-  const router = useRouter();
-  return <Fab onPress={() => router.push('/capture')} />;
 }
 
 const styles = StyleSheet.create({

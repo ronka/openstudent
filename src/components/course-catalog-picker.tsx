@@ -1,18 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { ChipField, ThemedTextInput } from '@/components/form-fields';
+import { ChipField } from '@/components/form-fields';
 import { FormSheet, SheetButton } from '@/components/form-sheet';
-import { TaskCheckbox } from '@/components/task-checkbox';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { CourseCatalogList } from '@/components/course-catalog-list';
 import { Spacing } from '@/constants/theme';
-import { catalogEntryByNumber, COURSE_CATALOG, isEnrolled, type CourseCatalogEntry } from '@/data/catalog';
+import { catalogEntryByNumber, type CourseCatalogEntry } from '@/data/catalog';
 import { SEMESTERS } from '@/data/constants';
 import { deriveCourseStatus, getCurrentSemester } from '@/data/semester';
-import { coursesCollection, useCourses } from '@/data/store';
+import { coursesCollection } from '@/data/store';
 import type { Course, Semester } from '@/data/types';
-import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 export function CourseCatalogPicker({
   visible,
@@ -24,17 +21,14 @@ export function CourseCatalogPicker({
   /** Called after courses are created, with the new course ids/names (e.g. to launch Quick Tasks). */
   onAdded: (created: { id: string; name: string }[]) => void;
 }) {
-  const courses = useCourses();
   const current = useMemo(() => getCurrentSemester(), []);
 
-  const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [year, setYear] = useState(current.year);
   const [semester, setSemester] = useState<Semester>(current.term);
 
   useEffect(() => {
     if (!visible) return;
-    setQuery('');
     setSelected(new Set());
     setYear(current.year);
     setSemester(current.term);
@@ -42,14 +36,7 @@ export function CourseCatalogPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
-  const filtered = useMemo(() => {
-    const q = query.trim();
-    if (!q) return COURSE_CATALOG;
-    return COURSE_CATALOG.filter((entry) => entry.name.includes(q) || entry.courseNumber.includes(q));
-  }, [query]);
-
   function toggle(entry: CourseCatalogEntry) {
-    if (isEnrolled(entry.courseNumber, courses)) return;
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(entry.courseNumber)) next.delete(entry.courseNumber);
@@ -84,32 +71,7 @@ export function CourseCatalogPicker({
   return (
     <FormSheet visible={visible} onClose={onClose} title="הוספת קורסים">
       <View style={styles.body}>
-        <ThemedTextInput value={query} onChangeText={setQuery} placeholder="חיפוש לפי שם או מספר קורס" />
-
-        <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
-          {filtered.map((entry) => {
-            const enrolled = isEnrolled(entry.courseNumber, courses);
-            const checked = enrolled || selected.has(entry.courseNumber);
-            return (
-              <Pressable key={entry.courseNumber} onPress={() => toggle(entry)} disabled={enrolled}>
-                <ThemedView type="backgroundElement" style={[styles.row, enrolled && styles.rowDisabled]}>
-                  <TaskCheckbox checked={checked} onToggle={() => toggle(entry)} />
-                  <View style={styles.rowMain}>
-                    <ThemedText style={styles.rowTitle}>{entry.name}</ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {[entry.courseNumber, entry.faculty].filter(Boolean).join(' · ')}
-                    </ThemedText>
-                  </View>
-                </ThemedView>
-              </Pressable>
-            );
-          })}
-          {filtered.length === 0 && (
-            <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
-              לא נמצאו קורסים
-            </ThemedText>
-          )}
-        </ScrollView>
+        <CourseCatalogList selected={selected} onToggle={toggle} listStyle={styles.list} />
 
         <ChipField
           label="סמסטר"
@@ -146,29 +108,5 @@ const styles = StyleSheet.create({
   },
   list: {
     maxHeight: 320,
-  },
-  listContent: {
-    gap: Spacing.two,
-  },
-  row: {
-    flexDirection: rtlFlexDirection.row,
-    alignItems: 'center',
-    gap: Spacing.three,
-    borderRadius: Spacing.three,
-    padding: Spacing.three,
-  },
-  rowDisabled: {
-    opacity: 0.5,
-  },
-  rowMain: {
-    flex: 1,
-    gap: Spacing.half,
-  },
-  rowTitle: {
-    textAlign: rtlTextAlign.start,
-  },
-  empty: {
-    textAlign: rtlTextAlign.center,
-    padding: Spacing.three,
   },
 });

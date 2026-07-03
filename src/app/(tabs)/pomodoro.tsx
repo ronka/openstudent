@@ -1,7 +1,7 @@
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { CaptureFab } from '@/components/capture-fab';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -9,6 +9,8 @@ import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 const FOCUS_DURATION_SECONDS = 25 * 60;
+
+const KEEP_AWAKE_TAG = 'pomodoro';
 
 const HOW_TO_STEPS = [
   'להחליט על המשימה שיש לעשות',
@@ -48,6 +50,17 @@ export default function PomodoroScreen() {
     return () => clearInterval(interval);
   }, [isRunning]);
 
+  // Keep the screen on while the timer is counting down, so a focus session
+  // isn't interrupted by the device auto-locking.
+  useEffect(() => {
+    if (!isRunning) return;
+
+    activateKeepAwakeAsync(KEEP_AWAKE_TAG);
+    return () => {
+      deactivateKeepAwake(KEEP_AWAKE_TAG);
+    };
+  }, [isRunning]);
+
   function handleStart() {
     if (secondsLeft === 0) return;
     setIsComplete(false);
@@ -65,8 +78,7 @@ export default function PomodoroScreen() {
   }
 
   return (
-    <>
-      <ScrollView contentContainerStyle={[styles.content, screenPadding]}>
+    <ScrollView contentContainerStyle={[styles.content, screenPadding]}>
         <View style={styles.timerSection}>
           <ThemedText style={styles.timer}>{formatTime(secondsLeft)}</ThemedText>
 
@@ -126,10 +138,7 @@ export default function PomodoroScreen() {
             </View>
           ))}
         </View>
-      </ScrollView>
-
-      <CaptureFab />
-    </>
+    </ScrollView>
   );
 }
 
@@ -145,6 +154,7 @@ const styles = StyleSheet.create({
   },
   timer: {
     fontSize: 64,
+    lineHeight: 76,
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },

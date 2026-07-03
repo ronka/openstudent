@@ -1,14 +1,15 @@
-import { useMemo } from 'react';
-import { SectionList, StyleSheet, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Pressable, SectionList, StyleSheet, View } from 'react-native';
 
 import { Badge } from '@/components/badge';
-import { CaptureFab } from '@/components/capture-fab';
+import { CourseCatalogPicker } from '@/components/course-catalog-picker';
 import { EntityRow } from '@/components/entity-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { COURSE_STATUS_LABELS, COURSE_STATUS_TONES, SEMESTERS } from '@/data/constants';
 import { deriveCourseStatus, getCurrentSemester } from '@/data/semester';
+import { degreeStats } from '@/data/stats';
 import { useCourses } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import type { Course, Semester } from '@/data/types';
@@ -18,6 +19,10 @@ export default function PlanScreen() {
   const courses = useCourses();
   const screenPadding = useScreenPadding();
   const current = useMemo(() => getCurrentSemester(), []);
+  const [showCatalogPicker, setShowCatalogPicker] = useState(false);
+
+  const degree = useMemo(() => degreeStats(courses, current), [courses, current]);
+  const showPastCoursesNudge = courses.length > 0 && degree.passedCount === 0;
 
   const sections = useMemo(() => {
     const groups = new Map<string, { year: number; semester: Semester | '—'; courses: Course[] }>();
@@ -40,6 +45,16 @@ export default function PlanScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      {showPastCoursesNudge && (
+        <Pressable onPress={() => setShowCatalogPicker(true)} style={styles.nudgeWrapper}>
+          <ThemedView type="accentSoft" style={styles.nudge}>
+            <ThemedText type="smallBold" themeColor="accent" style={styles.nudgeText}>
+              רוצה לראות התקדמות בתואר? הוסיפו קורסים שכבר עברת 🧭
+            </ThemedText>
+          </ThemedView>
+        </Pressable>
+      )}
+
       <SectionList
         sections={sections}
         keyExtractor={(course) => course.id}
@@ -74,7 +89,7 @@ export default function PlanScreen() {
         }
       />
 
-      <CaptureFab />
+      <CourseCatalogPicker visible={showCatalogPicker} onClose={() => setShowCatalogPicker(false)} onAdded={() => setShowCatalogPicker(false)} />
     </ThemedView>
   );
 }
@@ -82,6 +97,17 @@ export default function PlanScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  nudgeWrapper: {
+    padding: Spacing.three,
+    paddingBottom: 0,
+  },
+  nudge: {
+    borderRadius: Spacing.three,
+    padding: Spacing.three,
+  },
+  nudgeText: {
+    textAlign: rtlTextAlign.start,
   },
   listContent: {
     padding: Spacing.three,

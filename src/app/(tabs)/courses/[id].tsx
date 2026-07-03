@@ -6,7 +6,6 @@ import { Badge } from '@/components/badge';
 import { CourseFormModal } from '@/components/course-form-modal';
 import { EntityRow } from '@/components/entity-row';
 import { ExamFormModal } from '@/components/exam-form-modal';
-import { ThemedTextInput } from '@/components/form-fields';
 import { SheetButton } from '@/components/form-sheet';
 import { NotFoundView } from '@/components/not-found-view';
 import { Section } from '@/components/section';
@@ -19,13 +18,9 @@ import { deriveCourseStatus, getCurrentSemester } from '@/data/semester';
 import {
   assignmentsCollection,
   coursesCollection,
-  materialsCollection,
-  recordingsCollection,
   useAssignmentsByCourse,
   useCourse,
   useExamsByCourse,
-  useMaterialsByCourse,
-  useRecordingsByCourse,
 } from '@/data/store';
 import type { Exam } from '@/data/types';
 import { rtlFlexDirection, rtlMargin, rtlTextAlign } from '@/utils/rtl';
@@ -36,33 +31,17 @@ export default function CourseDetailScreen() {
   const course = useCourse(id);
   const assignments = useAssignmentsByCourse(id);
   const exams = useExamsByCourse(id);
-  const recordings = useRecordingsByCourse(id);
-  const materials = useMaterialsByCourse(id);
   const current = useMemo(() => getCurrentSemester(), []);
 
   const [showCourseForm, setShowCourseForm] = useState(false);
   const [showExamForm, setShowExamForm] = useState(false);
   const [editingExam, setEditingExam] = useState<Exam | undefined>(undefined);
-  const [addingMaterial, setAddingMaterial] = useState(false);
-  const [materialName, setMaterialName] = useState('');
 
   if (!course) {
     return <NotFoundView title="קורס" message="הקורס לא נמצא" />;
   }
 
   const status = deriveCourseStatus(course, current);
-  const recording = recordings[0];
-  const recordingNumber = recording?.recordingNumber ?? 0;
-
-  function bumpRecording(delta: number) {
-    if (!course) return;
-    const next = Math.max(0, recordingNumber + delta);
-    if (recording) {
-      recordingsCollection.update(recording.id, { recordingNumber: next });
-    } else if (next > 0) {
-      recordingsCollection.add({ id: `r-${Date.now()}`, name: 'הקלטה', recordingNumber: next, courseId: course.id });
-    }
-  }
 
   function openCreateExam() {
     setEditingExam(undefined);
@@ -72,22 +51,6 @@ export default function CourseDetailScreen() {
   function openEditExam(exam: Exam) {
     setEditingExam(exam);
     setShowExamForm(true);
-  }
-
-  function handleAddMaterial() {
-    if (!course) return;
-    const trimmedName = materialName.trim();
-    if (!trimmedName) return;
-    materialsCollection.add({
-      id: `m-${Date.now()}`,
-      name: trimmedName,
-      courseId: course.id,
-      assignmentIds: [],
-      tags: [],
-      createdAt: new Date().toISOString().slice(0, 10),
-    });
-    setMaterialName('');
-    setAddingMaterial(false);
   }
 
   function handleDelete() {
@@ -198,55 +161,6 @@ export default function CourseDetailScreen() {
           ))}
         </Section>
 
-        <Section title="הקלטות" emptyLabel="" isEmpty={false}>
-          <ThemedView type="backgroundElement" style={styles.stepperRow}>
-            <Pressable onPress={() => bumpRecording(-1)} disabled={recordingNumber === 0}>
-              <ThemedView type="accentSoft" style={styles.stepperButton}>
-                <ThemedText type="smallBold">−</ThemedText>
-              </ThemedView>
-            </Pressable>
-            <ThemedText style={styles.stepperLabel}>{`הקלטה אחרונה: #${recordingNumber}`}</ThemedText>
-            <Pressable onPress={() => bumpRecording(1)}>
-              <ThemedView type="accentSoft" style={styles.stepperButton}>
-                <ThemedText type="smallBold">+</ThemedText>
-              </ThemedView>
-            </Pressable>
-          </ThemedView>
-        </Section>
-
-        <Section
-          title="חומרים"
-          emptyLabel="אין חומרים לקורס זה"
-          isEmpty={materials.length === 0 && !addingMaterial}
-          action={
-            <ThemedText type="link" themeColor="textSecondary" onPress={() => setAddingMaterial((value) => !value)}>
-              + הוספת חומר
-            </ThemedText>
-          }>
-          {addingMaterial && (
-            <View style={styles.row}>
-              <ThemedTextInput
-                value={materialName}
-                onChangeText={setMaterialName}
-                placeholder="שם החומר"
-                style={styles.rowMain}
-              />
-              <ThemedText type="link" onPress={handleAddMaterial}>
-                הוספה
-              </ThemedText>
-            </View>
-          )}
-          {materials.map((material) => (
-            <ThemedView key={material.id} type="backgroundElement" style={styles.row}>
-              <View style={styles.rowMain}>
-                <ThemedText style={styles.rowTitle}>{material.name}</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {material.createdAt}
-                </ThemedText>
-              </View>
-            </ThemedView>
-          ))}
-        </Section>
       </ScrollView>
 
       <CourseFormModal visible={showCourseForm} onClose={() => setShowCourseForm(false)} course={course} />
@@ -314,22 +228,5 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
-  },
-  stepperRow: {
-    flexDirection: rtlFlexDirection.row,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderRadius: Spacing.three,
-    padding: Spacing.three,
-  },
-  stepperButton: {
-    width: 36,
-    height: 36,
-    borderRadius: Spacing.two,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepperLabel: {
-    textAlign: rtlTextAlign.center,
   },
 });

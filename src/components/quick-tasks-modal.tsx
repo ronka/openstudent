@@ -1,30 +1,10 @@
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { DateField } from '@/components/date-field';
-import { ChipField } from '@/components/form-fields';
 import { FormSheet, SheetButton } from '@/components/form-sheet';
-import { ThemedText } from '@/components/themed-text';
+import { buildAssignmentPayloads, buildPendingTasks, QuickTasksForm, type PendingTask } from '@/components/quick-tasks-form';
 import { Spacing } from '@/constants/theme';
-import { ASSIGNMENT_NUMBER_RANGE, getAssignmentName } from '@/data/constants';
 import { assignmentsCollection } from '@/data/store';
-import type { AssignmentType } from '@/data/types';
-import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
-
-const COUNT_OPTIONS = Array.from({ length: 10 }, (_, index) => index); // 0–9
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-interface PendingTask {
-  type: AssignmentType;
-  number: number;
-  dueDate: string;
-}
-
-/** Sequential numbers from the type's range start, e.g. count 3 for MAMAN → [11, 12, 13]. */
-function buildPending(type: AssignmentType, count: number): PendingTask[] {
-  const [start] = ASSIGNMENT_NUMBER_RANGE[type];
-  return Array.from({ length: count }, (_, index) => ({ type, number: start + index, dueDate: '' }));
-}
 
 export function QuickTasksModal({
   visible,
@@ -53,7 +33,7 @@ export function QuickTasksModal({
   const total = mamanCount + mamachCount;
 
   function goToReview() {
-    setPending([...buildPending('MAMAN', mamanCount), ...buildPending('MAMACH', mamachCount)]);
+    setPending(buildPendingTasks(mamanCount, mamachCount));
     setStep('review');
   }
 
@@ -62,19 +42,7 @@ export function QuickTasksModal({
   }
 
   function handleCreate() {
-    const now = Date.now();
-    assignmentsCollection.addMany(
-      pending.map((task, index) => ({
-        id: `${courseId}-${task.type}-${task.number}-${now}-${index}`,
-        name: getAssignmentName(task.type, task.number),
-        courseId,
-        type: task.type,
-        taskNumber: task.number,
-        status: 'todo',
-        dueDate: task.dueDate.trim() || new Date(now + 30 * DAY_MS).toISOString().slice(0, 10),
-        materialIds: [],
-      }))
-    );
+    assignmentsCollection.addMany(buildAssignmentPayloads(courseId, pending));
     onClose();
   }
 
@@ -82,47 +50,29 @@ export function QuickTasksModal({
     <FormSheet visible={visible} onClose={onClose} title={`מטלות ל${courseName}`}>
       {step === 'select' ? (
         <View style={styles.body}>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.hint}>
-            כמה מטלות ליצור? (המספרים יוקצו אוטומטית)
-          </ThemedText>
-
-          <ChipField
-            label="ממ״נ"
-            scroll
-            options={COUNT_OPTIONS}
-            getLabel={String}
-            isSelected={(count) => mamanCount === count}
-            onSelect={setMamanCount}
+          <QuickTasksForm
+            step="select"
+            mamanCount={mamanCount}
+            mamachCount={mamachCount}
+            onMamanCountChange={setMamanCount}
+            onMamachCountChange={setMamachCount}
+            pending={pending}
+            onPendingDueDateChange={setPendingDueDate}
           />
-          <ChipField
-            label="ממ״ח"
-            scroll
-            options={COUNT_OPTIONS}
-            getLabel={String}
-            isSelected={(count) => mamachCount === count}
-            onSelect={setMamachCount}
-          />
-
           <SheetButton label="המשך" onPress={goToReview} disabled={total === 0} />
           <SheetButton label="דלג" variant="ghost" onPress={onClose} />
         </View>
       ) : (
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.body}>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.hint}>
-            הגדירו תאריך יעד לכל מטלה (ריק → 30 יום מהיום)
-          </ThemedText>
-
-          {pending.map((task, index) => (
-            <View key={`${task.type}-${task.number}`} style={styles.reviewRow}>
-              <ThemedText style={styles.reviewName}>{getAssignmentName(task.type, task.number)}</ThemedText>
-              <DateField
-                value={task.dueDate || undefined}
-                onChange={(value) => setPendingDueDate(index, value)}
-                style={styles.input}
-              />
-            </View>
-          ))}
-
+          <QuickTasksForm
+            step="review"
+            mamanCount={mamanCount}
+            mamachCount={mamachCount}
+            onMamanCountChange={setMamanCount}
+            onMamachCountChange={setMamachCount}
+            pending={pending}
+            onPendingDueDateChange={setPendingDueDate}
+          />
           <SheetButton label={`צור ${pending.length} מטלות`} onPress={handleCreate} />
           <SheetButton label="חזרה" variant="ghost" onPress={() => setStep('select')} />
         </ScrollView>
@@ -134,21 +84,5 @@ export function QuickTasksModal({
 const styles = StyleSheet.create({
   body: {
     gap: Spacing.three,
-  },
-  hint: {
-    textAlign: rtlTextAlign.start,
-  },
-  reviewRow: {
-    flexDirection: rtlFlexDirection.row,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.three,
-  },
-  reviewName: {
-    flex: 1,
-    textAlign: rtlTextAlign.start,
-  },
-  input: {
-    flex: 1,
   },
 });

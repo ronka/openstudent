@@ -32,11 +32,6 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Icon sf="graduationcap" md="school" />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="materials">
-        <NativeTabs.Trigger.Label>חומרים</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="folder" md="folder" />
-      </NativeTabs.Trigger>
-
       <NativeTabs.Trigger name="plan">
         <NativeTabs.Trigger.Label>תוכנית</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="calendar" md="event_note" />

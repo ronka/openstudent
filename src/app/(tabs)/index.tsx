@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { TONE_BACKGROUND_CLASSNAMES } from '@/components/badge';
-import { CaptureFab } from '@/components/capture-fab';
 import { DashboardCard } from '@/components/dashboard-card';
 import { EntityRow } from '@/components/entity-row';
 import { MiniBarChart } from '@/components/mini-bar-chart';
@@ -22,7 +21,7 @@ import {
   gradeTimeline,
   upcomingExamsSorted,
 } from '@/data/stats';
-import { assignmentsCollection, useAssignments, useCourses, useExams, useRecordings } from '@/data/store';
+import { assignmentsCollection, useAssignments, useCourses, useExams } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
@@ -32,7 +31,6 @@ export default function DashboardScreen() {
   const courses = useCourses();
   const assignments = useAssignments();
   const exams = useExams();
-  const recordings = useRecordings();
   const screenPadding = useScreenPadding();
 
   const courseNameById = useMemo(() => new Map(courses.map((course) => [course.id, course.name])), [courses]);
@@ -125,11 +123,25 @@ export default function DashboardScreen() {
           <StatCard value={String(upcomingExams.length)} label="מבחנים קרבים" />
         </View>
 
-        <DashboardCard title="התקדמות בתואר">
-          <ProgressBar value={degree.degreePct} height={Spacing.three} showLabel />
+        <DashboardCard title="טיימר פומודורו" href="/pomodoro">
           <ThemedText type="small" themeColor="textSecondary" style={styles.cardCaption}>
-            {`${degree.passedCredits}/${degree.totalCredits} נק"ז · עברו ${degree.passedCount} · בלימוד ${degree.studyingCount} · מתוכנן ${degree.plannedCount}`}
+            התמקדו במשימה אחת בפרקי זמן של 25 דקות — הקישו כדי להתחיל סבב
           </ThemedText>
+        </DashboardCard>
+
+        <DashboardCard title="התקדמות בתואר">
+          {degree.passedCount === 0 ? (
+            <ThemedText type="small" themeColor="textSecondary" style={styles.cardCaption}>
+              הוסיפו קורסים שעברת כדי לראות התקדמות
+            </ThemedText>
+          ) : (
+            <>
+              <ProgressBar value={degree.degreePct} height={Spacing.three} showLabel />
+              <ThemedText type="small" themeColor="textSecondary" style={styles.cardCaption}>
+                {`${degree.passedCredits}/${degree.totalCredits} נק"ז · עברו ${degree.passedCount} · בלימוד ${degree.studyingCount} · מתוכנן ${degree.plannedCount}`}
+              </ThemedText>
+            </>
+          )}
         </DashboardCard>
 
         {grades.length > 0 && (
@@ -196,28 +208,7 @@ export default function DashboardScreen() {
           )}
         </DashboardCard>
 
-        <DashboardCard title="מעקב הקלטות">
-          {recordings.length === 0 ? (
-            <ThemedText type="small" themeColor="textSecondary" style={styles.cardCaption}>
-              אין הקלטות במעקב
-            </ThemedText>
-          ) : (
-            <View style={styles.list}>
-              {recordings.map((recording) => (
-                <EntityRow
-                  key={recording.id}
-                  title={recording.name}
-                  subtitle={courseNameById.get(recording.courseId)}
-                  trailing={<ThemedText type="smallBold">#{recording.recordingNumber}</ThemedText>}
-                  href={`/courses/${recording.courseId}`}
-                />
-              ))}
-            </View>
-          )}
-        </DashboardCard>
       </ScrollView>
-
-      <CaptureFab />
     </ThemedView>
   );
 }
