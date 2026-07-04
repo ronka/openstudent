@@ -12,6 +12,8 @@
         "CFBundleDevelopmentRegion": "he",
         "CFBundleLocalizations": [
           "he",
+          "he",
+          "he",
           "he"
         ],
         "CFBundleAllowMixedLocalizations": true,
@@ -55,6 +57,12 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
-    "owner": "ronkaa"
+    "owner": "ronkaa",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/3c4f0d84-19a5-4ca6-b7e2-09e82a6600ec"
+    }
   }
 }
