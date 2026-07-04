@@ -124,3 +124,11 @@ export function upcomingExamsSorted(exams: Exam[]): Exam[] {
     .filter((exam) => exam.grade === undefined)
     .sort((a, b) => a.date.localeCompare(b.date));
 }
+
+/** Open (non-done) assignments, earliest due date first; missing due dates sort last. */
+export function upcomingAssignmentsSorted(assignments: Assignment[], limit?: number): Assignment[] {
+  const sorted = assignments
+    .filter((a) => a.status !== 'done')
+    .sort((a, b) => (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999'));
+  return limit === undefined ? sorted : sorted.slice(0, limit);
+}

@@ -1,28 +1,29 @@
-import { useMemo } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Link } from 'expo-router';
+import { useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { TONE_BACKGROUND_CLASSNAMES } from '@/components/badge';
 import { DashboardCard } from '@/components/dashboard-card';
 import { EntityRow } from '@/components/entity-row';
+import { HighlightCard } from '@/components/highlight-card';
 import { MiniBarChart } from '@/components/mini-bar-chart';
-import { ProgressBar } from '@/components/progress-bar';
-import { SegmentedBar } from '@/components/segmented-bar';
 import { StatCard } from '@/components/stat-card';
 import { TaskCheckbox } from '@/components/task-checkbox';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Text } from '@/components/ui/text';
 import { Spacing } from '@/constants/theme';
-import { ASSIGNMENT_STATUS_LABELS, ASSIGNMENT_STATUS_TONES, ASSIGNMENT_STATUSES } from '@/data/constants';
-import { isCurrentSemester, getCurrentSemester } from '@/data/semester';
+import { randomQuote } from '@/data/quotes';
+import { getCurrentSemester, isCurrentSemester } from '@/data/semester';
 import {
-  assignmentBreakdown,
   degreeStats,
   gpaStats,
   gradeTimeline,
+  upcomingAssignmentsSorted,
   upcomingExamsSorted,
 } from '@/data/stats';
 import { assignmentsCollection, useAssignments, useCourses, useExams } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
+import { formatDaysUntil } from '@/utils/date';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 const OPEN_ASSIGNMENTS_LIMIT = 5;
@@ -41,11 +42,13 @@ export default function DashboardScreen() {
     [courses, current]
   );
 
+  const [quote] = useState(() => randomQuote());
+
   const degree = useMemo(() => degreeStats(courses), [courses]);
   const gpa = useMemo(() => gpaStats(courses), [courses]);
-  const breakdown = useMemo(() => assignmentBreakdown(assignments), [assignments]);
   const grades = useMemo(() => gradeTimeline(exams), [exams]);
   const upcomingExams = useMemo(() => upcomingExamsSorted(exams), [exams]);
+  const nextExam = upcomingExams[0];
 
   const openTaskCountByCourse = useMemo(() => {
     const map = new Map<string, number>();
@@ -65,13 +68,10 @@ export default function DashboardScreen() {
   }, [upcomingExams]);
 
   const openAssignments = useMemo(
-    () =>
-      assignments
-        .filter((assignment) => assignment.status !== 'done')
-        .sort((a, b) => (a.dueDate ?? '').localeCompare(b.dueDate ?? ''))
-        .slice(0, OPEN_ASSIGNMENTS_LIMIT),
+    () => upcomingAssignmentsSorted(assignments, OPEN_ASSIGNMENTS_LIMIT),
     [assignments]
   );
+  const mostUrgentTask = openAssignments[0];
 
   const degreePercent = Math.round(degree.degreePct * 100);
 
@@ -84,8 +84,55 @@ export default function DashboardScreen() {
             היי 👋
           </ThemedText>
           <ThemedText type="small" themeColor="textSecondary" style={styles.headerText}>
-            {`${degree.passedCount} קורסים הושלמו · ${degreePercent}% מהתואר`}
+            {quote}
           </ThemedText>
+        </View>
+
+        <View style={styles.heroColumn}>
+          <View style={styles.heroCell}>
+            {mostUrgentTask ? (
+              <HighlightCard
+                tone="warning"
+                emoji="⏰"
+                label="המשימה הדחופה"
+                title={mostUrgentTask.name}
+                subtitle={[
+                  courseNameById.get(mostUrgentTask.courseId),
+                  mostUrgentTask.dueDate ? formatDaysUntil(mostUrgentTask.dueDate) : undefined,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+                href={`/assignments/${mostUrgentTask.id}`}
+              />
+            ) : (
+              <HighlightCard tone="neutral" emoji="✅" label="משימות" title="אין משימות דחופות" />
+            )}
+          </View>
+          <View style={styles.heroCell}>
+            {nextExam ? (
+              <HighlightCard
+                tone="info"
+                emoji="📝"
+                label="המבחן הקרוב"
+                title={nextExam.title}
+                subtitle={[courseNameById.get(nextExam.courseId), formatDaysUntil(nextExam.date)]
+                  .filter(Boolean)
+                  .join(' · ')}
+                href={`/courses/${nextExam.courseId}`}
+              />
+            ) : (
+              <HighlightCard tone="neutral" emoji="🎉" label="מבחנים" title="אין מבחנים קרבים" />
+            )}
+          </View>
+        </View>
+
+        <View style={styles.grid}>
+          <StatCard value={`${degreePercent}%`} label="מהתואר" progress={degree.degreePct} />
+          <StatCard
+            value={gpa.count > 0 ? gpa.gpa.toFixed(1) : '—'}
+            label="ציון ממוצע"
+            caption={`${gpa.count} קורסים`}
+          />
         </View>
 
         <DashboardCard title="הסמסטר הנוכחי">
@@ -112,37 +159,20 @@ export default function DashboardScreen() {
           )}
         </DashboardCard>
 
-        <View style={styles.grid}>
-          <StatCard value={`${degreePercent}%`} label="מהתואר" progress={degree.degreePct} />
-          <StatCard
-            value={gpa.count > 0 ? gpa.gpa.toFixed(1) : '—'}
-            label="ציון ממוצע"
-            caption={`${gpa.count} קורסים`}
-          />
-          <StatCard value={String(breakdown.open)} label="משימות פתוחות" />
-          <StatCard value={String(upcomingExams.length)} label="מבחנים קרבים" />
-        </View>
-
-        <DashboardCard title="טיימר פומודורו" href="/pomodoro">
-          <ThemedText type="small" themeColor="textSecondary" style={styles.cardCaption}>
-            התמקדו במשימה אחת בפרקי זמן של 25 דקות — הקישו כדי להתחיל סבב
-          </ThemedText>
-        </DashboardCard>
-
-        <DashboardCard title="התקדמות בתואר">
-          {degree.passedCount === 0 ? (
-            <ThemedText type="small" themeColor="textSecondary" style={styles.cardCaption}>
-              הוסיפו קורסים שעברת כדי לראות התקדמות
-            </ThemedText>
-          ) : (
-            <>
-              <ProgressBar value={degree.degreePct} height={Spacing.three} showLabel />
-              <ThemedText type="small" themeColor="textSecondary" style={styles.cardCaption}>
-                {`${degree.passedCredits}/${degree.totalCredits} נק"ז · עברו ${degree.passedCount} · בלימוד ${degree.studyingCount} · מתוכנן ${degree.plannedCount}`}
-              </ThemedText>
-            </>
-          )}
-        </DashboardCard>
+        <HighlightCard
+          tone="destructive"
+          soft
+          emoji="🍅"
+          title="בואו נלמד עם פומודורו"
+          subtitle="התמקדו 25 דקות בכל פעם — הקישו כדי להתחיל"
+          trailing={
+            <Text className="text-destructive" style={styles.chevron}>
+              ‹
+            </Text>
+          }
+          href="/pomodoro"
+          style={styles.fullWidth}
+        />
 
         {grades.length > 0 && (
           <DashboardCard title="מגמת ציונים">
@@ -152,16 +182,6 @@ export default function DashboardScreen() {
             </ThemedText>
           </DashboardCard>
         )}
-
-        <DashboardCard title="מטלות">
-          <SegmentedBar
-            segments={ASSIGNMENT_STATUSES.map((status) => ({
-              label: ASSIGNMENT_STATUS_LABELS[status],
-              value: breakdown[status],
-              colorClassName: TONE_BACKGROUND_CLASSNAMES[ASSIGNMENT_STATUS_TONES[status]],
-            }))}
-          />
-        </DashboardCard>
 
         <DashboardCard title="מבחנים קרבים">
           {upcomingExams.length === 0 ? (
@@ -183,7 +203,15 @@ export default function DashboardScreen() {
           )}
         </DashboardCard>
 
-        <DashboardCard title="משימות TODO">
+        <DashboardCard
+          title="המשימות הקרובות"
+          action={
+            <Link href="/assignments" asChild>
+              <Pressable>
+                <ThemedText type="link">הצג הכל ›</ThemedText>
+              </Pressable>
+            </Link>
+          }>
           {openAssignments.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary" style={styles.cardCaption}>
               אין משימות פתוחות
@@ -231,6 +259,21 @@ const styles = StyleSheet.create({
     flexDirection: rtlFlexDirection.row,
     flexWrap: 'wrap',
     gap: Spacing.two,
+  },
+  heroColumn: {
+    gap: Spacing.two,
+  },
+  heroCell: {
+    alignSelf: 'stretch',
+  },
+  fullWidth: {
+    flex: undefined,
+    alignSelf: 'stretch',
+  },
+  chevron: {
+    fontSize: 24,
+    lineHeight: 24,
+    fontWeight: '700',
   },
   list: {
     gap: Spacing.two,
