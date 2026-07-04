@@ -23,6 +23,7 @@ import {
   useExamsByCourse,
 } from '@/data/store';
 import type { Exam } from '@/data/types';
+import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { rtlFlexDirection, rtlMargin, rtlTextAlign } from '@/utils/rtl';
 
 export default function CourseDetailScreen() {
@@ -32,6 +33,7 @@ export default function CourseDetailScreen() {
   const assignments = useAssignmentsByCourse(id);
   const exams = useExamsByCourse(id);
   const current = useMemo(() => getCurrentSemester(), []);
+  const screenPadding = useScreenPadding();
 
   const [showCourseForm, setShowCourseForm] = useState(false);
   const [showExamForm, setShowExamForm] = useState(false);
@@ -71,7 +73,8 @@ export default function CourseDetailScreen() {
   return (
     <ThemedView style={styles.container}>
       <Stack.Screen options={{ title: course.name }} />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: screenPadding.paddingBottom }]}>
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <ThemedText type="subtitle" style={styles.name}>
