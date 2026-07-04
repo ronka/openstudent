@@ -8,7 +8,6 @@
     "scheme": "com.ronkaa.openstudent",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
       "infoPlist": {
         "CFBundleDevelopmentRegion": "he",
         "CFBundleLocalizations": [
