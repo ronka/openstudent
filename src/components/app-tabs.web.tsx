@@ -14,6 +14,7 @@ import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
 import { MaxContentWidth, NativeChromeColors, Spacing } from '@/constants/theme';
+import { isRTL, rtlFlexDirection, rtlMargin } from '@/utils/rtl';
 
 export default function AppTabs() {
   return (
@@ -35,6 +36,9 @@ export default function AppTabs() {
           </TabTrigger>
           <TabTrigger name="plan" href="/plan" asChild>
             <TabButton>תוכנית</TabButton>
+          </TabTrigger>
+          <TabTrigger name="study-groups" href="/study-groups" asChild>
+            <TabButton>קבוצות</TabButton>
           </TabTrigger>
           <TabTrigger name="pomodoro" href="/pomodoro" asChild>
             <TabButton>פומודורו</TabButton>
@@ -97,20 +101,20 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     justifyContent: 'center',
     alignItems: 'center',
-    flexDirection: 'row',
+    flexDirection: rtlFlexDirection.row,
   },
   innerContainer: {
     paddingVertical: Spacing.two,
     paddingHorizontal: Spacing.five,
     borderRadius: Spacing.five,
-    flexDirection: 'row',
+    flexDirection: rtlFlexDirection.row,
     alignItems: 'center',
     flexGrow: 1,
     gap: Spacing.two,
     maxWidth: MaxContentWidth,
   },
   brandText: {
-    marginRight: 'auto',
+    ...(isRTL ? { marginLeft: 'auto' } : { marginRight: 'auto' }),
   },
   pressed: {
     opacity: 0.7,
@@ -121,10 +125,10 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.three,
   },
   externalPressable: {
-    flexDirection: 'row',
+    flexDirection: rtlFlexDirection.row,
     justifyContent: 'center',
     alignItems: 'center',
     gap: Spacing.one,
-    marginLeft: Spacing.three,
+    ...rtlMargin.marginEnd(Spacing.three),
   },
 });

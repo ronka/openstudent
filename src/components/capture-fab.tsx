@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -10,23 +10,26 @@ export function Fab({ onPress }: { onPress: () => void }) {
   const insets = useSafeAreaInsets();
 
   return (
-    <Pressable
-      onPress={onPress}
-      style={[styles.container, { bottom: insets.bottom + BottomTabInset + Spacing.three }]}>
-      <ThemedView type="text" style={styles.fab}>
-        <ThemedText themeColor="background" style={styles.plus}>
-          +
-        </ThemedText>
-      </ThemedView>
-    </Pressable>
+    <View
+      pointerEvents="box-none"
+      style={[styles.container, { bottom: insets.bottom + BottomTabInset + Spacing.two }]}>
+      <Pressable onPress={onPress}>
+        <ThemedView type="text" style={styles.fab}>
+          <ThemedText themeColor="background" style={styles.plus}>
+            +
+          </ThemedText>
+        </ThemedView>
+      </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    left: '50%',
-    transform: [{ translateX: -28 }],
+    left: 0,
+    right: 0,
+    alignItems: 'center',
   },
   fab: {
     width: 56,

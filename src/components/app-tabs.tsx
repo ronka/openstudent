@@ -1,5 +1,5 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { useColorScheme } from 'react-native';
+import { I18nManager, useColorScheme } from 'react-native';
 
 import { NativeChromeColors } from '@/constants/theme';
 
@@ -11,7 +11,8 @@ export default function AppTabs() {
     <NativeTabs
       backgroundColor={colors.background}
       indicatorColor={colors.backgroundElement}
-      labelStyle={{ selected: { color: colors.text } }}>
+      labelStyle={{ selected: { color: colors.text } }}
+      unstable_nativeProps={{ direction: I18nManager.isRTL ? 'rtl' : 'ltr' }}>
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>בית</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="house" md="home" />
@@ -35,6 +36,11 @@ export default function AppTabs() {
       <NativeTabs.Trigger name="plan">
         <NativeTabs.Trigger.Label>תוכנית</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="calendar" md="event_note" />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="study-groups">
+        <NativeTabs.Trigger.Label>קבוצות</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="person.3" md="groups" />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="pomodoro">

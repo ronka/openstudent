@@ -15,7 +15,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import { catalogEntryByNumber, type CourseCatalogEntry } from '@/data/catalog';
 import { SEMESTERS } from '@/data/constants';
 import { markOnboardingComplete } from '@/data/onboarding';
-import { deriveCourseStatus, getCurrentSemester } from '@/data/semester';
+import { deriveCourseStatus, getCurrentSemester, getYearOptions } from '@/data/semester';
 import { assignmentsCollection, coursesCollection, examsCollection } from '@/data/store';
 import type { Assignment, Course, Exam, Semester } from '@/data/types';
 import { rtlAlign, rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
@@ -380,7 +380,7 @@ export default function OnboardingScreen() {
 }
 
 // A handful of years around "now" — enough range for planning ahead/behind.
-const YEAR_OPTIONS = Array.from({ length: 6 }, (_, index) => getCurrentSemester().year - 2 + index);
+const YEAR_OPTIONS = getYearOptions();
 
 function OnboardingStep({
   headline,

@@ -13,7 +13,7 @@ import { degreeStats } from '@/data/stats';
 import { useCourses } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import type { Course, Semester } from '@/data/types';
-import { rtlTextAlign } from '@/utils/rtl';
+import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 export default function PlanScreen() {
   const courses = useCourses();
@@ -45,38 +45,59 @@ export default function PlanScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      {showPastCoursesNudge && (
-        <Pressable onPress={() => setShowCatalogPicker(true)} style={styles.nudgeWrapper}>
-          <ThemedView type="accentSoft" style={styles.nudge}>
-            <ThemedText type="smallBold" themeColor="accent" style={styles.nudgeText}>
-              רוצה לראות התקדמות בתואר? הוסיפו קורסים שכבר עברת 🧭
-            </ThemedText>
-          </ThemedView>
-        </Pressable>
-      )}
-
       <SectionList
         sections={sections}
         keyExtractor={(course) => course.id}
+        ListHeaderComponent={
+          showPastCoursesNudge ? (
+            <Pressable onPress={() => setShowCatalogPicker(true)} style={styles.nudgeWrapper}>
+              <ThemedView type="accentSoft" style={styles.nudge}>
+                <ThemedText type="smallBold" themeColor="accent" style={styles.nudgeText}>
+                  רוצה לראות התקדמות בתואר? הוסיפו קורסים שכבר עברת 🧭
+                </ThemedText>
+              </ThemedView>
+            </Pressable>
+          ) : null
+        }
         renderSectionHeader={({ section }) => (
-          <ThemedView style={styles.sectionHeader}>
-            <ThemedText type="smallBold" style={styles.sectionTitle}>
-              {section.title}
-            </ThemedText>
-          </ThemedView>
+          <View style={styles.timelineRow}>
+            <View style={styles.rail}>
+              <ThemedView type="border" style={styles.railLine} />
+              <ThemedView type="accent" style={styles.railDotHeader} />
+            </View>
+            <ThemedView style={styles.sectionHeader}>
+              <ThemedText type="smallBold" style={styles.sectionTitle}>
+                {section.title}
+              </ThemedText>
+            </ThemedView>
+          </View>
         )}
         renderItem={({ item }) => {
           const status = deriveCourseStatus(item, current);
           return (
-            <EntityRow
-              title={item.name}
-              subtitle={[item.courseNumber, item.faculty].filter(Boolean).join(' · ')}
-              trailing={<Badge label={COURSE_STATUS_LABELS[status]} tone={COURSE_STATUS_TONES[status]} />}
-              href={`/courses/${item.id}`}
-            />
+            <View style={styles.timelineRow}>
+              <View style={styles.rail}>
+                <ThemedView type="border" style={styles.railLine} />
+                <ThemedView type="border" style={styles.railDot} />
+              </View>
+              <View style={styles.rowContent}>
+                <EntityRow
+                  title={item.name}
+                  subtitle={[item.courseNumber, item.faculty].filter(Boolean).join(' · ')}
+                  trailing={<Badge label={COURSE_STATUS_LABELS[status]} tone={COURSE_STATUS_TONES[status]} />}
+                  href={`/courses/${item.id}`}
+                />
+              </View>
+            </View>
           );
         }}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={() => (
+          <View style={styles.separatorRow}>
+            <View style={styles.rail}>
+              <ThemedView type="border" style={styles.railLine} />
+            </View>
+          </View>
+        )}
         contentContainerStyle={[
           styles.listContent,
           screenPadding,
@@ -94,13 +115,15 @@ export default function PlanScreen() {
   );
 }
 
+const RAIL_WIDTH = 28;
+const RAIL_LINE_WIDTH = 2;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   nudgeWrapper: {
-    padding: Spacing.three,
-    paddingBottom: 0,
+    paddingBottom: Spacing.three,
   },
   nudge: {
     borderRadius: Spacing.three,
@@ -112,13 +135,45 @@ const styles = StyleSheet.create({
   listContent: {
     padding: Spacing.three,
   },
+  timelineRow: {
+    flexDirection: rtlFlexDirection.row,
+    alignItems: 'stretch',
+  },
+  rail: {
+    width: RAIL_WIDTH,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  railLine: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: (RAIL_WIDTH - RAIL_LINE_WIDTH) / 2,
+    width: RAIL_LINE_WIDTH,
+  },
+  railDotHeader: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  railDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
   sectionHeader: {
+    flex: 1,
+    justifyContent: 'center',
     paddingVertical: Spacing.two,
   },
   sectionTitle: {
     textAlign: rtlTextAlign.start,
   },
-  separator: {
+  rowContent: {
+    flex: 1,
+  },
+  separatorRow: {
+    flexDirection: rtlFlexDirection.row,
     height: Spacing.two,
   },
   empty: {

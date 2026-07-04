@@ -55,7 +55,7 @@ export function CourseCatalogList({
                 <TaskCheckbox checked={checked} onToggle={press} />
                 <View style={styles.rowMain}>
                   <ThemedText style={styles.rowTitle}>{entry.name}</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
+                  <ThemedText style={styles.rowSubtitle} type="small" themeColor="textSecondary">
                     {[entry.courseNumber, entry.faculty].filter(Boolean).join(' · ')}
                   </ThemedText>
                 </View>
@@ -95,6 +95,9 @@ const styles = StyleSheet.create({
     gap: Spacing.half,
   },
   rowTitle: {
+    textAlign: rtlTextAlign.start,
+  },
+  rowSubtitle: {
     textAlign: rtlTextAlign.start,
   },
   empty: {

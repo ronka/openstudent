@@ -26,7 +26,7 @@ export function EntityRow({
       <View style={styles.main}>
         <ThemedText style={styles.title}>{title}</ThemedText>
         {subtitle && (
-          <ThemedText type="small" themeColor="textSecondary">
+          <ThemedText style={styles.subtitle} type="small" themeColor="textSecondary">
             {subtitle}
           </ThemedText>
         )}
@@ -61,6 +61,9 @@ const styles = StyleSheet.create({
     ...rtlMargin.marginEnd(Spacing.three),
   },
   title: {
+    textAlign: rtlTextAlign.start,
+  },
+  subtitle: {
     textAlign: rtlTextAlign.start,
   },
   pressed: {

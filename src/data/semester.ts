@@ -26,6 +26,12 @@ export function getCurrentSemester(now: Date = new Date()): CurrentSemester {
   return { year: calendarYear, term: 'ג' };
 }
 
+/** Selectable academic years for pickers: six years centered on now (−2 … +3). */
+export function getYearOptions(now: Date = new Date()): number[] {
+  const base = getCurrentSemester(now).year;
+  return Array.from({ length: 6 }, (_, index) => base - 2 + index);
+}
+
 export function isCurrentSemester(course: SemesterFields, current: CurrentSemester): boolean {
   return course.year === current.year && course.semester === current.term;
 }

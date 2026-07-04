@@ -7,7 +7,7 @@ import { CourseCatalogList } from '@/components/course-catalog-list';
 import { Spacing } from '@/constants/theme';
 import { catalogEntryByNumber, type CourseCatalogEntry } from '@/data/catalog';
 import { SEMESTERS } from '@/data/constants';
-import { deriveCourseStatus, getCurrentSemester } from '@/data/semester';
+import { deriveCourseStatus, getCurrentSemester, getYearOptions } from '@/data/semester';
 import { coursesCollection } from '@/data/store';
 import type { Course, Semester } from '@/data/types';
 
@@ -99,8 +99,7 @@ export function CourseCatalogPicker({
   );
 }
 
-// A handful of years around "now" — enough range for planning ahead/behind.
-const YEAR_OPTIONS = Array.from({ length: 6 }, (_, index) => getCurrentSemester().year - 2 + index);
+const YEAR_OPTIONS = getYearOptions();
 
 const styles = StyleSheet.create({
   body: {

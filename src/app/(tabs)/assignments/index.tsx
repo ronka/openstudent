@@ -7,6 +7,7 @@ import { Fab } from '@/components/capture-fab';
 import { CourseFilterChip } from '@/components/course-select-modal';
 import { EntityRow } from '@/components/entity-row';
 import { FilterChip } from '@/components/filter-chip';
+import { SwipeableRow } from '@/components/swipeable-row';
 import { TaskCheckbox } from '@/components/task-checkbox';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -44,18 +45,20 @@ function AssignmentRow({ assignment, courseName }: { assignment: Assignment; cou
   const checked = assignment.status === 'done';
   const subtitle = [courseName, assignment.dueDate && `📅 ${assignment.dueDate}`].filter(Boolean).join(' · ');
   return (
-    <EntityRow
-      title={`${TYPE_EMOJI[assignment.type]} ${assignment.name}`}
-      subtitle={subtitle}
-      leading={
-        <TaskCheckbox
-          checked={checked}
-          onToggle={() => assignmentsCollection.update(assignment.id, { status: checked ? 'todo' : 'done' })}
-        />
-      }
-      trailing={<Badge label={ASSIGNMENT_STATUS_LABELS[assignment.status]} tone={STATUS_BADGE_TONE[assignment.status]} />}
-      href={`/assignments/${assignment.id}`}
-    />
+    <SwipeableRow onDelete={() => assignmentsCollection.remove(assignment.id)}>
+      <EntityRow
+        title={`${TYPE_EMOJI[assignment.type]} ${assignment.name}`}
+        subtitle={subtitle}
+        leading={
+          <TaskCheckbox
+            checked={checked}
+            onToggle={() => assignmentsCollection.update(assignment.id, { status: checked ? 'todo' : 'done' })}
+          />
+        }
+        trailing={<Badge label={ASSIGNMENT_STATUS_LABELS[assignment.status]} tone={STATUS_BADGE_TONE[assignment.status]} />}
+        href={`/assignments/${assignment.id}`}
+      />
+    </SwipeableRow>
   );
 }
 
