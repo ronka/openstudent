@@ -12,7 +12,9 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "node": "22.23.1",
+      "resourceClass": "large"
     }
   },
   "submit": {
