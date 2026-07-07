@@ -11,6 +11,8 @@
     "@gluestack-ui/core": "^5.0.15",
     "@gluestack-ui/utils": "^5.0.6",
     "@legendapp/motion": "^2.5.3",
+    "@neondatabase/serverless": "^1.1.0",
+    "drizzle-orm": "^0.45.2",
     "expo": "~57.0.2",
     "expo-constants": "~57.0.3",
     "expo-dev-client": "~57.0.5",
@@ -49,6 +51,8 @@
     "@tailwindcss/postcss": "^4.3.2",
     "@types/react": "~19.2.2",
     "babel-plugin-module-resolver": "^5.0.3",
+    "dotenv": "^17.4.2",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.4",
     "eslint-config-expo": "~57.0.0",
     "tailwindcss": "^4.3.2",
@@ -68,7 +72,11 @@
     "build:simulator:ios": "npx eas build --platform ios --profile development-simulator",
     "build:simulator:android": "npx eas build -p android --profile development-simulator",
     "build:production:ios": "node scripts/bump-app-version.js && npx eas build --platform ios --profile production",
-    "build:production:android": "node scripts/bump-app-version.js && npx eas build --platform android --profile production"
+    "build:production:android": "node scripts/bump-app-version.js && npx eas build --platform android --profile production",
+    "scrape:catalog": "node scripts/scrape-catalog.mjs",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "tsx -r dotenv/config src/db/seed.ts"
   },
   "private": true
 }

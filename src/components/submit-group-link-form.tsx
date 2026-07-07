@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet } from 'react-native';
 
 import { ChipField, TextField } from '@/components/form-fields';
 import { FormSheet, SheetButton } from '@/components/form-sheet';
@@ -15,16 +15,25 @@ import { rtlTextAlign } from '@/utils/rtl';
 const YEAR_OPTIONS = getYearOptions();
 
 /**
- * Easy submission form for a study-group link. MVP: validates the URL (must be a
- * recognized WhatsApp/Telegram invite) and `console.log`s the payload — no persistence.
+ * Submission form for a study-group link. Validates the URL client-side (must be a
+ * recognized WhatsApp/Telegram invite) and persists it via `POST /api/study-groups`.
  */
-export function SubmitGroupLinkForm({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+export function SubmitGroupLinkForm({
+  visible,
+  onClose,
+  onSubmitted,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSubmitted?: () => void;
+}) {
   const current = useMemo(() => getCurrentSemester(), []);
 
   const [courseNumber, setCourseNumber] = useState('');
   const [year, setYear] = useState(current.year);
   const [semester, setSemester] = useState<Semester>(current.term);
   const [url, setUrl] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
@@ -43,7 +52,7 @@ export function SubmitGroupLinkForm({ visible, onClose }: { visible: boolean; on
       : 'קישור לא מזוהה — יש להזין קישור וואטסאפ או טלגרם'
     : undefined;
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!courseNumber) {
       Alert.alert('שגיאה', 'אנא בחרו קורס');
       return;
@@ -54,11 +63,28 @@ export function SubmitGroupLinkForm({ visible, onClose }: { visible: boolean; on
       return;
     }
 
-    const payload = { courseNumber, year, semester, platform, url: url.trim() };
-    console.log('submit group link', payload);
+    setSubmitting(true);
+    try {
+      const response = await fetch('/api/study-groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseNumber, year, semester, url: url.trim() }),
+      });
 
-    Alert.alert('נשלח', 'הקישור נשלח לבדיקה');
-    onClose();
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        Alert.alert('שגיאה', data?.error ?? 'שליחת הקישור נכשלה');
+        return;
+      }
+
+      onSubmitted?.();
+      Alert.alert('נשלח', 'הקישור נוסף בהצלחה');
+      onClose();
+    } catch {
+      Alert.alert('שגיאה', 'שליחת הקישור נכשלה');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -93,7 +119,11 @@ export function SubmitGroupLinkForm({ visible, onClose }: { visible: boolean; on
           </ThemedText>
         )}
 
-        <SheetButton label="שליחה" onPress={handleSubmit} />
+        {submitting ? (
+          <ActivityIndicator />
+        ) : (
+          <SheetButton label="שליחה" onPress={handleSubmit} disabled={submitting} />
+        )}
       </ScrollView>
     </FormSheet>
   );

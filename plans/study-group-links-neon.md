@@ -44,6 +44,7 @@ Postgres exclusively over these endpoints.
 
 - **Type**: AFK
 - **Blocked by**: None - can start immediately
+- Status: done
 
 #### What to build
 
@@ -69,12 +70,18 @@ This slice carries the foundational scaffolding because the read path can't exis
 
 #### Acceptance criteria
 
-- [ ] `drizzle-kit generate` produces a migration; `db:migrate` creates the tables in Neon.
-- [ ] `db:seed` inserts the 8 links; they are visible via `GET /api/study-groups`.
-- [ ] The study-groups screen renders links fetched from the API (not the static array).
-- [ ] Loading, error, and empty states are handled.
-- [ ] `DATABASE_URL` is only referenced in server code; it is not bundled into the client and `.env` is gitignored.
-- [ ] `web.output` is `"server"` and the app still builds/runs in dev.
+- [x] `drizzle-kit generate` produces a migration; `db:migrate` creates the tables in Neon.
+- [x] `db:seed` inserts the 8 links; they are visible via `GET /api/study-groups`.
+- [x] The study-groups screen renders links fetched from the API (not the static array).
+- [x] Loading, error, and empty states are handled.
+- [x] `DATABASE_URL` is only referenced in server code; it is not bundled into the client and `.env` is gitignored.
+- [x] `web.output` is `"server"` and the app still builds/runs in dev.
+
+**Verification notes:**
+- Migration `drizzle/0000_narrow_ulik.sql` applied to Neon `production` branch (project `holy-truth-10275230`); confirmed `study_group_links` and `study_group_reports` tables exist via `mcp__Neon__get_database_tables`.
+- Seeded 8 rows; `curl http://localhost:PORT/api/study-groups` and `?course=20441` filter both verified against live data.
+- `npx tsc --noEmit` and `npm run lint` pass with no new errors introduced (pre-existing lint issues in unrelated files only).
+- Found and confirmed (via `git stash` A/B test) a **pre-existing, unrelated** issue: this project's web SSR crashes with "Cannot read properties of undefined (reading 'default')" on every route, reproducible on `main` before any of this task's changes and independent of the `web.output: static → server` switch. Likely a nativewind 5 preview / react-native-web SSR incompatibility. Out of scope for this migration; flagged for separate investigation. Native (iOS) is the primary target and is unaffected by this web-only SSR path — attempted to verify on the iOS Simulator but lacked a UI-automation tool (no `idb`/`cliclick`) to drive the dev-client past a one-time Safari deep-link confirmation dialog, so native rendering was not visually confirmed this session, only via API/DB checks and code review.
 
 #### User stories addressed
 
@@ -86,6 +93,7 @@ This slice carries the foundational scaffolding because the read path can't exis
 
 - **Type**: AFK
 - **Blocked by**: Task 1
+- Status: done
 
 #### What to build
 
@@ -101,10 +109,15 @@ Turn the submit form from a `console.log` stub into a real write.
 
 #### Acceptance criteria
 
-- [ ] Submitting a valid WhatsApp/Telegram link inserts a row in Neon and returns it.
-- [ ] Server-side validation rejects non-WhatsApp/Telegram URLs with a 4xx and a clear message.
-- [ ] After submit + refresh, the new link appears in the list.
-- [ ] The form no longer logs the payload to the console.
+- [x] Submitting a valid WhatsApp/Telegram link inserts a row in Neon and returns it.
+- [x] Server-side validation rejects non-WhatsApp/Telegram URLs with a 4xx and a clear message.
+- [x] After submit + refresh, the new link appears in the list.
+- [x] The form no longer logs the payload to the console.
+
+**Verification notes:**
+- `POST /api/study-groups` tested directly: valid WhatsApp link → `201` with the created row (verified in Neon then deleted as test data); invalid URL → `400 {"error":"url must be a valid WhatsApp or Telegram invite link"}`; missing `courseNumber` → `400 {"error":"courseNumber is required"}`.
+- `submit-group-link-form.tsx` now posts to the API, shows a spinner while submitting, surfaces server error messages via `Alert`, and calls `onSubmitted` (wired in `index.tsx` to `fetchLinks({ silent: true })`) so the list refreshes after a successful submit without needing the screen to regain focus.
+- `npx tsc --noEmit` passes with no new errors.
 
 #### User stories addressed
 
@@ -116,6 +129,7 @@ Turn the submit form from a `console.log` stub into a real write.
 
 - **Type**: AFK
 - **Blocked by**: Task 1
+- Status: done
 
 #### What to build
 
@@ -130,9 +144,13 @@ Persist reports instead of logging them.
 
 #### Acceptance criteria
 
-- [ ] Reporting a link inserts a `study_group_reports` row and increments `report_count`.
-- [ ] Reporting an unknown link id returns 404.
-- [ ] The report action no longer logs to the console.
+- [x] Reporting a link inserts a `study_group_reports` row and increments `report_count`.
+- [x] Reporting an unknown link id returns 404.
+- [x] The report action no longer logs to the console.
+
+**Verification notes:**
+- `POST /api/study-groups/:id/report` tested directly: valid id → `201`, `report_count` incremented 0→1 (confirmed via `mcp__Neon__run_sql`, then reset), row inserted into `study_group_reports`; unknown UUID → `404 {"error":"Link not found"}`.
+- `npx tsc --noEmit` passes; no new lint errors (the flagged `submit-group-link-form.tsx` warning is a pre-existing `useEffect` reset pattern, unrelated to this task's edits).
 
 #### User stories addressed
 
@@ -143,7 +161,29 @@ Persist reports instead of logging them.
 ### Task 4: Production server deployment
 
 - **Type**: HITL
-- **Blocked by**: Task 1, Task 2, Task 3
+- **Blocked by**: Task 1, Task 2, Task 3 (all done)
+- Status: in progress
+- Blocker: requires the user's EAS account/CLI login and an explicit go-ahead to run `eas deploy` and set the hosting `DATABASE_URL` secret — not something to do unattended.
+
+**Pre-deploy bug fix (resolved):** `npx expo export -p web` crashed on every route with
+`Cannot read properties of undefined (reading 'default')`, blocking this task entirely. Root-caused
+via bisection against a scratch vanilla SDK 57 project (added deps one at a time until it broke):
+- Cause 1: `nativewind/babel`'s transform corrupts Metro's server/SSR bundle (breaks even a bare
+  `<View><Text>` route). Fix: `babel.config.js` now skips the `nativewind/babel` preset when
+  `api.caller(c => c.isServer)` is true — native and the client web bundle are unaffected, only the
+  server-only prerender bundle skips it (that HTML is replaced by the real bundle on hydration
+  anyway, so this app never needed nativewind styling there).
+- Cause 2: `src/data/kv-storage.web.ts` read `window.localStorage` at module-eval time
+  (`useHasCompletedOnboarding`), which throws under Node during prerendering. Fix: guarded with
+  `typeof window !== 'undefined'`.
+- Both fixes verified: `expo export -p web` now completes (13 static routes + both API routes
+  bundled), `npx tsc --noEmit` clean, dev server still serves pages/API correctly.
+- Separate, lower-priority finding (not fixed, doesn't block this task): the web *client* bundle
+  (browser-rendered, post-hydration) still shows a blank page due to a circular import between
+  `react-native-web`'s `AnimatedFlatList` and `react-native-css`'s `FlatList` substitution
+  (`globalClassNamePolyfill: true`). Confirmed this is web-only — native rendering (checked on iOS
+  Simulator, onboarding screen) is unaffected, since native never touches `react-native-web`. Since
+  this app is native-first and the web target only exists to host `/api/*`, this was left as-is.
 
 #### What to build
 

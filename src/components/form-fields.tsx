@@ -86,7 +86,7 @@ export function ThemedTextInput({
         onChangeText={onChangeText}
         placeholder={placeholder}
         keyboardType={keyboardType}
-        style={{ textAlign: rtlTextAlign.start }}
+        style={{ textAlign: 'right' }}
       />
     </Input>
   );

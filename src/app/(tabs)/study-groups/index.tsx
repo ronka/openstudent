@@ -1,6 +1,7 @@
+import { useFocusEffect } from 'expo-router';
 import { openBrowserAsync } from 'expo-web-browser';
-import { useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Badge } from '@/components/badge';
 import { Fab } from '@/components/capture-fab';
@@ -14,15 +15,23 @@ import { Spacing } from '@/constants/theme';
 import { catalogEntryByNumber } from '@/data/catalog';
 import { SEMESTERS } from '@/data/constants';
 import { getYearOptions } from '@/data/semester';
-import { PLATFORM_EMOJI, PLATFORM_LABELS, STUDY_GROUP_LINKS, type StudyGroupLink } from '@/data/study-groups';
+import { PLATFORM_EMOJI, PLATFORM_LABELS, type StudyGroupLink } from '@/data/study-groups';
 import type { Semester } from '@/data/types';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 const YEAR_OPTIONS = getYearOptions();
 
-function reportLink(link: StudyGroupLink, reason: string) {
-  console.log('report group link', { linkId: link.id, reason });
+async function reportLink(link: StudyGroupLink, reason: string) {
+  try {
+    await fetch(`/api/study-groups/${link.id}/report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason }),
+    });
+  } catch {
+    // Best-effort: the report action has no UI to surface a failure to.
+  }
 }
 
 export default function StudyGroupsScreen() {
@@ -33,15 +42,47 @@ export default function StudyGroupsScreen() {
   const [semesterFilter, setSemesterFilter] = useState<Semester | 'all'>('all');
   const [yearFilter, setYearFilter] = useState<number | 'all'>('all');
 
+  const [links, setLinks] = useState<StudyGroupLink[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchLinks = useCallback(async ({ silent }: { silent?: boolean } = {}) => {
+    if (!silent) setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/study-groups');
+      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+      const data: StudyGroupLink[] = await response.json();
+      setLinks(data);
+    } catch {
+      setError('שגיאה בטעינת הקבוצות');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchLinks({ silent: true });
+    }, [fetchLinks])
+  );
+
+  function onRefresh() {
+    setRefreshing(true);
+    fetchLinks({ silent: true });
+  }
+
   const filteredLinks = useMemo(
     () =>
-      STUDY_GROUP_LINKS.filter((link) => {
+      links.filter((link) => {
         if (courseFilter && link.courseNumber !== courseFilter) return false;
         if (semesterFilter !== 'all' && link.semester !== semesterFilter) return false;
         if (yearFilter !== 'all' && link.year !== yearFilter) return false;
         return true;
       }),
-    [courseFilter, semesterFilter, yearFilter]
+    [links, courseFilter, semesterFilter, yearFilter]
   );
 
   function openLink(link: StudyGroupLink) {
@@ -90,44 +131,57 @@ export default function StudyGroupsScreen() {
         </ScrollView>
       </View>
 
-      <FlatList
-        data={filteredLinks}
-        keyExtractor={(link) => link.id}
-        renderItem={({ item }) => {
-          const courseName = catalogEntryByNumber(item.courseNumber)?.name ?? item.courseNumber;
-          const subtitle = [item.courseNumber, `שנה ${item.year}`, `סמסטר ${item.semester}`].join(' · ');
-          return (
-            <Pressable onPress={() => openLink(item)} style={({ pressed }) => pressed && styles.pressed}>
-              <EntityRow
-                title={courseName}
-                subtitle={subtitle}
-                trailing={
-                  <View style={styles.trailing}>
-                    <Badge
-                      label={`${PLATFORM_EMOJI[item.platform]} ${PLATFORM_LABELS[item.platform]}`}
-                      tone={item.platform === 'whatsapp' ? 'success' : 'info'}
-                    />
-                    <Pressable onPress={() => onReport(item)} hitSlop={8} style={({ pressed }) => pressed && styles.pressed}>
-                      <ThemedText style={styles.report}>🚩</ThemedText>
-                    </Pressable>
-                  </View>
-                }
-              />
-            </Pressable>
-          );
-        }}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        contentContainerStyle={[styles.listContent, { paddingBottom: screenPadding.paddingBottom }]}
-        ListEmptyComponent={
-          <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
-            אין קבוצות תואמות
-          </ThemedText>
-        }
-      />
+      {loading ? (
+        <ActivityIndicator style={styles.loading} />
+      ) : error ? (
+        <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
+          {error}
+        </ThemedText>
+      ) : (
+        <FlatList
+          data={filteredLinks}
+          keyExtractor={(link) => link.id}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          renderItem={({ item }) => {
+            const courseName = catalogEntryByNumber(item.courseNumber)?.name ?? item.courseNumber;
+            const subtitle = [item.courseNumber, `שנה ${item.year}`, `סמסטר ${item.semester}`].join(' · ');
+            return (
+              <Pressable onPress={() => openLink(item)} style={({ pressed }) => pressed && styles.pressed}>
+                <EntityRow
+                  title={courseName}
+                  subtitle={subtitle}
+                  trailing={
+                    <View style={styles.trailing}>
+                      <Badge
+                        label={`${PLATFORM_EMOJI[item.platform]} ${PLATFORM_LABELS[item.platform]}`}
+                        tone={item.platform === 'whatsapp' ? 'success' : 'info'}
+                      />
+                      <Pressable onPress={() => onReport(item)} hitSlop={8} style={({ pressed }) => pressed && styles.pressed}>
+                        <ThemedText style={styles.report}>🚩</ThemedText>
+                      </Pressable>
+                    </View>
+                  }
+                />
+              </Pressable>
+            );
+          }}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          contentContainerStyle={[styles.listContent, { paddingBottom: screenPadding.paddingBottom }]}
+          ListEmptyComponent={
+            <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
+              אין קבוצות תואמות
+            </ThemedText>
+          }
+        />
+      )}
 
       <Fab onPress={() => setShowForm(true)} />
 
-      <SubmitGroupLinkForm visible={showForm} onClose={() => setShowForm(false)} />
+      <SubmitGroupLinkForm
+        visible={showForm}
+        onClose={() => setShowForm(false)}
+        onSubmitted={() => fetchLinks({ silent: true })}
+      />
     </ThemedView>
   );
 }
@@ -148,6 +202,9 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: Spacing.three,
+  },
+  loading: {
+    marginTop: Spacing.four,
   },
   separator: {
     height: Spacing.two,

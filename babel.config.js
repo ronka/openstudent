@@ -1,8 +1,12 @@
 module.exports = function (api) {
-  api.cache(true);
+  // nativewind/babel's transform breaks Expo Router's server-side HTML prerender
+  // (web.output: "server" always prerenders pages, even though this app doesn't need
+  // SSR/web styling) - skip it only for that server bundle; native/client-web keep it.
+  const isServer = api.caller((caller) => caller?.isServer ?? false);
+  api.cache.using(() => isServer);
 
   return {
-    presets: [['babel-preset-expo'], 'nativewind/babel'],
+    presets: [['babel-preset-expo'], ...(isServer ? [] : ['nativewind/babel'])],
 
     plugins: [
       [
