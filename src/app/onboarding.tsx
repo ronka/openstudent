@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CourseCatalogList } from '@/components/course-catalog-list';
 import { DashboardCard } from '@/components/dashboard-card';
 import { DateField } from '@/components/date-field';
-import { ChipField } from '@/components/form-fields';
+import { ChipField, ThemedTextInput } from '@/components/form-fields';
 import { buildAssignmentPayloads, buildPendingTasks, QuickTasksForm, type PendingTask } from '@/components/quick-tasks-form';
 import { TaskCheckbox } from '@/components/task-checkbox';
 import { ThemedText } from '@/components/themed-text';
@@ -15,6 +15,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import { catalogEntryByNumber, type CourseCatalogEntry } from '@/data/catalog';
 import { SEMESTERS } from '@/data/constants';
 import { markOnboardingComplete } from '@/data/onboarding';
+import { setName } from '@/data/profile';
 import { deriveCourseStatus, getCurrentSemester, getYearOptions } from '@/data/semester';
 import { assignmentsCollection, coursesCollection, examsCollection } from '@/data/store';
 import type { Assignment, Course, Exam, Semester } from '@/data/types';
@@ -40,13 +41,14 @@ const SUMMARY_MIRROR_COPY: Record<StruggleKey, string> = {
 
 /** Total onboarding screens in the finished flow (§4) — dots render for all six even
  * before later steps exist, so Tasks 4–6 only need to add step branches, not this UI. */
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 7;
 
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const current = useMemo(() => getCurrentSemester(), []);
 
   const [step, setStep] = useState(1);
+  const [name, setNameInput] = useState('');
   const [struggle, setStruggle] = useState<StruggleKey | null>(null);
 
   const [selectedCourses, setSelectedCourses] = useState<Set<string>>(new Set());
@@ -70,10 +72,11 @@ export default function OnboardingScreen() {
   }, [createdAssignments]);
 
   function finish() {
-    setStep(6);
+    setStep(7);
   }
 
   function completeOnboarding() {
+    setName(name);
     markOnboardingComplete();
   }
 
@@ -113,7 +116,7 @@ export default function OnboardingScreen() {
     setCreatedCourses(created);
     setCourseLoopIndex(0);
     resetLoopForm();
-    setStep(5);
+    setStep(6);
   }
 
   function resetLoopForm() {
@@ -177,10 +180,23 @@ export default function OnboardingScreen() {
 
       {step === 2 && (
         <OnboardingStep
+          headline="איך קוראים לך?"
+          body="ככה נוכל לדבר איתך בגובה העיניים."
+          primaryLabel="נעים להכיר"
+          primaryDisabled={!name.trim()}
+          onPrimary={() => setStep(3)}>
+          <View style={styles.nameField}>
+            <ThemedTextInput value={name} onChangeText={setNameInput} placeholder="השם שלך" />
+          </View>
+        </OnboardingStep>
+      )}
+
+      {step === 3 && (
+        <OnboardingStep
           headline="מה הכי מציק לך בלימודים?"
           primaryLabel="המשך"
           primaryDisabled={!struggle}
-          onPrimary={() => setStep(3)}>
+          onPrimary={() => setStep(4)}>
           <View style={styles.optionList}>
             {STRUGGLE_OPTIONS.map((option) => {
               const selected = struggle === option.key;
@@ -198,16 +214,16 @@ export default function OnboardingScreen() {
         </OnboardingStep>
       )}
 
-      {step === 3 && struggle && (
+      {step === 4 && struggle && (
         <OnboardingStep
           headline={REFLECTION_COPY[struggle]}
           body="נתחיל מהסמסטר הנוכחי — זה לוקח דקה."
           primaryLabel="יאללה"
-          onPrimary={() => setStep(4)}
+          onPrimary={() => setStep(5)}
         />
       )}
 
-      {step === 4 && (
+      {step === 5 && (
         <Animated.View entering={FadeIn.duration(240)} exiting={FadeOut.duration(120)} style={styles.step4Container}>
           <View style={styles.step4Body}>
             <ThemedText type="subtitle" style={styles.headline}>
@@ -273,7 +289,7 @@ export default function OnboardingScreen() {
         </Animated.View>
       )}
 
-      {step === 5 && createdCourses[courseLoopIndex] && (
+      {step === 6 && createdCourses[courseLoopIndex] && (
         <Animated.View entering={FadeIn.duration(240)} exiting={FadeOut.duration(120)} style={styles.step4Container}>
           <ScrollView contentContainerStyle={styles.step5Body} keyboardShouldPersistTaps="handled">
             <ThemedText type="subtitle" style={styles.headline}>
@@ -327,7 +343,7 @@ export default function OnboardingScreen() {
         </Animated.View>
       )}
 
-      {step === 6 && (
+      {step === 7 && (
         <Animated.View entering={FadeIn.duration(240)} exiting={FadeOut.duration(120)} style={styles.step}>
           <ScrollView contentContainerStyle={styles.stepBody}>
             {createdCourses.length === 0 ? (
@@ -460,6 +476,9 @@ const styles = StyleSheet.create({
   },
   body: {
     textAlign: rtlTextAlign.start,
+  },
+  nameField: {
+    marginTop: Spacing.two,
   },
   optionList: {
     gap: Spacing.two,

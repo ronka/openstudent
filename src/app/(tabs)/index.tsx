@@ -12,6 +12,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Text } from '@/components/ui/text';
 import { Spacing } from '@/constants/theme';
+import { useName } from '@/data/profile';
 import { randomQuote } from '@/data/quotes';
 import { getCurrentSemester, isCurrentSemester } from '@/data/semester';
 import {
@@ -32,6 +33,7 @@ export default function DashboardScreen() {
   const courses = useCourses();
   const assignments = useAssignments();
   const exams = useExams();
+  const name = useName();
   const screenPadding = useScreenPadding();
 
   const courseNameById = useMemo(() => new Map(courses.map((course) => [course.id, course.name])), [courses]);
@@ -81,7 +83,7 @@ export default function DashboardScreen() {
         contentContainerStyle={[styles.content, screenPadding]}>
         <View style={styles.header}>
           <ThemedText type="subtitle" style={styles.headerText}>
-            היי 👋
+            {name ? `היי ${name} 👋` : 'היי 👋'}
           </ThemedText>
           <ThemedText type="small" themeColor="textSecondary" style={styles.headerText}>
             {quote}
