@@ -11,6 +11,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { ASSIGNMENT_TYPE_LABELS } from '@/data/constants';
 import { assignmentsCollection, useAssignment, useCourse } from '@/data/store';
+import { posthog } from '@/utils/analytics';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 export default function AssignmentDetailScreen() {
@@ -29,6 +30,7 @@ export default function AssignmentDetailScreen() {
         style: 'destructive',
         onPress: () => {
           assignmentsCollection.remove(assignment.id);
+          posthog.capture('assignment_deleted', { assignment_id: assignment.id, source: 'assignment_detail' });
           router.back();
         },
       },
@@ -49,11 +51,16 @@ export default function AssignmentDetailScreen() {
           </ThemedText>
           <TaskCheckbox
             checked={assignment.status === 'done'}
-            onToggle={() =>
-              assignmentsCollection.update(assignment.id, {
-                status: assignment.status === 'done' ? 'todo' : 'done',
-              })
-            }
+            onToggle={() => {
+              const toStatus = assignment.status === 'done' ? 'todo' : 'done';
+              assignmentsCollection.update(assignment.id, { status: toStatus });
+              posthog.capture('assignment_status_toggled', {
+                assignment_id: assignment.id,
+                from_status: assignment.status,
+                to_status: toStatus,
+                source: 'assignment_detail',
+              });
+            }}
           />
         </View>
 

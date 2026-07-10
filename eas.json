@@ -17,7 +17,9 @@
       },
       "env": {
         "APP_ENV": "development",
-        "EXPO_PUBLIC_APP_ENV": "development"
+        "EXPO_PUBLIC_APP_ENV": "development",
+        "EXPO_PUBLIC_POSTHOG_API_KEY": "phc_Ao9Yvs2vCU6KYKVWQjtNTnjd29ah9Qb9Nur9aLJ5NEBK",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com"
       },
       "channel": "development"
     },
@@ -33,7 +35,9 @@
       },
       "env": {
         "APP_ENV": "preview",
-        "EXPO_PUBLIC_APP_ENV": "preview"
+        "EXPO_PUBLIC_APP_ENV": "preview",
+        "EXPO_PUBLIC_POSTHOG_API_KEY": "phc_Ao9Yvs2vCU6KYKVWQjtNTnjd29ah9Qb9Nur9aLJ5NEBK",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com"
       },
       "channel": "preview"
     },
@@ -41,7 +45,9 @@
       "autoIncrement": true,
       "env": {
         "APP_ENV": "production",
-        "EXPO_PUBLIC_APP_ENV": "production"
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_POSTHOG_API_KEY": "phc_Ao9Yvs2vCU6KYKVWQjtNTnjd29ah9Qb9Nur9aLJ5NEBK",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com"
       },
       "channel": "production",
       "environment": "production"

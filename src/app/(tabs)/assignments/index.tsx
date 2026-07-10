@@ -17,6 +17,7 @@ import { assignmentsCollection, useAssignments, useCourses } from '@/data/store'
 import { getCurrentSemester, isCurrentSemester } from '@/data/semester';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import type { Assignment, AssignmentStatus, AssignmentType } from '@/data/types';
+import { posthog } from '@/utils/analytics';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 type StatusFilter = 'all' | AssignmentStatus;
@@ -45,14 +46,27 @@ function AssignmentRow({ assignment, courseName }: { assignment: Assignment; cou
   const checked = assignment.status === 'done';
   const subtitle = [courseName, assignment.dueDate && `📅 ${assignment.dueDate}`].filter(Boolean).join(' · ');
   return (
-    <SwipeableRow onDelete={() => assignmentsCollection.remove(assignment.id)}>
+    <SwipeableRow
+      onDelete={() => {
+        assignmentsCollection.remove(assignment.id);
+        posthog.capture('assignment_deleted', { assignment_id: assignment.id, source: 'assignments_list' });
+      }}>
       <EntityRow
         title={`${TYPE_EMOJI[assignment.type]} ${assignment.name}`}
         subtitle={subtitle}
         leading={
           <TaskCheckbox
             checked={checked}
-            onToggle={() => assignmentsCollection.update(assignment.id, { status: checked ? 'todo' : 'done' })}
+            onToggle={() => {
+              const toStatus = checked ? 'todo' : 'done';
+              assignmentsCollection.update(assignment.id, { status: toStatus });
+              posthog.capture('assignment_status_toggled', {
+                assignment_id: assignment.id,
+                from_status: assignment.status,
+                to_status: toStatus,
+                source: 'assignments_list',
+              });
+            }}
           />
         }
         trailing={<Badge label={ASSIGNMENT_STATUS_LABELS[assignment.status]} tone={STATUS_BADGE_TONE[assignment.status]} />}
@@ -108,14 +122,20 @@ export default function AssignmentsScreen() {
           <FilterChip
             label={`${STATUS_FILTER_EMOJI.all} הכל`}
             selected={statusFilter === 'all'}
-            onPress={() => setStatusFilter('all')}
+            onPress={() => {
+              setStatusFilter('all');
+              posthog.capture('assignment_filter_changed', { filter_type: 'status', value: 'all' });
+            }}
           />
           {ASSIGNMENT_STATUSES.map((status) => (
             <FilterChip
               key={status}
               label={`${STATUS_FILTER_EMOJI[status]} ${ASSIGNMENT_STATUS_LABELS[status]}`}
               selected={statusFilter === status}
-              onPress={() => setStatusFilter(status)}
+              onPress={() => {
+                setStatusFilter(status);
+                posthog.capture('assignment_filter_changed', { filter_type: 'status', value: status });
+              }}
             />
           ))}
         </ScrollView>
@@ -123,12 +143,18 @@ export default function AssignmentsScreen() {
           <FilterChip
             label="🎓 הסמסטר הנוכחי"
             selected={semesterScope === 'current'}
-            onPress={() => setSemesterScope((scope) => (scope === 'current' ? 'all' : 'current'))}
+            onPress={() => {
+              setSemesterScope((scope) => (scope === 'current' ? 'all' : 'current'));
+              posthog.capture('assignment_filter_changed', { filter_type: 'semester_scope' });
+            }}
           />
           <CourseFilterChip
             courses={filterableCourses}
             selectedCourseId={courseFilter === 'all' ? undefined : courseFilter}
-            onChange={(id) => setCourseFilter(id ?? 'all')}
+            onChange={(id) => {
+              setCourseFilter(id ?? 'all');
+              posthog.capture('assignment_filter_changed', { filter_type: 'course', value: id ?? 'all' });
+            }}
             clearLabel="כל הקורסים"
           />
         </View>

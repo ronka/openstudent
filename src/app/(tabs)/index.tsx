@@ -24,6 +24,7 @@ import {
 } from '@/data/stats';
 import { assignmentsCollection, useAssignments, useCourses, useExams } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
+import { posthog } from '@/utils/analytics';
 import { formatDaysUntil } from '@/utils/date';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
@@ -105,6 +106,7 @@ export default function DashboardScreen() {
                   .filter(Boolean)
                   .join(' · ')}
                 href={`/assignments/${mostUrgentTask.id}`}
+                onPress={() => posthog.capture('dashboard_urgent_task_tapped', { assignment_id: mostUrgentTask.id })}
               />
             ) : (
               <HighlightCard tone="neutral" emoji="✅" label="משימות" title="אין משימות דחופות" />
@@ -121,6 +123,7 @@ export default function DashboardScreen() {
                   .filter(Boolean)
                   .join(' · ')}
                 href={`/courses/${nextExam.courseId}`}
+                onPress={() => posthog.capture('dashboard_next_exam_tapped', { exam_id: nextExam.id })}
               />
             ) : (
               <HighlightCard tone="neutral" emoji="🎉" label="מבחנים" title="אין מבחנים קרבים" />
@@ -155,6 +158,7 @@ export default function DashboardScreen() {
                     .filter(Boolean)
                     .join(' · ')}
                   href={`/courses/${course.id}`}
+                  onPress={() => posthog.capture('dashboard_course_tapped', { course_id: course.id })}
                 />
               ))}
             </View>
@@ -174,6 +178,7 @@ export default function DashboardScreen() {
           }
           href="/pomodoro"
           style={styles.fullWidth}
+          onPress={() => posthog.capture('dashboard_pomodoro_promo_tapped')}
         />
 
         {grades.length > 0 && (
@@ -199,6 +204,7 @@ export default function DashboardScreen() {
                   subtitle={courseNameById.get(exam.courseId)}
                   trailing={<ThemedText type="smallBold">{exam.date}</ThemedText>}
                   href={`/courses/${exam.courseId}`}
+                  onPress={() => posthog.capture('dashboard_exam_tapped', { exam_id: exam.id })}
                 />
               ))}
             </View>
@@ -209,7 +215,7 @@ export default function DashboardScreen() {
           title="המשימות הקרובות"
           action={
             <Link href="/assignments" asChild>
-              <Pressable>
+              <Pressable onPress={() => posthog.capture('dashboard_assignments_see_all_tapped')}>
                 <ThemedText type="link">הצג הכל ›</ThemedText>
               </Pressable>
             </Link>
@@ -228,7 +234,10 @@ export default function DashboardScreen() {
                   leading={
                     <TaskCheckbox
                       checked={false}
-                      onToggle={() => assignmentsCollection.update(assignment.id, { status: 'done' })}
+                      onToggle={() => {
+                        assignmentsCollection.update(assignment.id, { status: 'done' });
+                        posthog.capture('dashboard_task_toggled', { assignment_id: assignment.id, to_status: 'done' });
+                      }}
                     />
                   }
                   href={`/assignments/${assignment.id}`}

@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,6 +19,7 @@ import { setName } from '@/data/profile';
 import { deriveCourseStatus, getCurrentSemester, getYearOptions } from '@/data/semester';
 import { assignmentsCollection, coursesCollection, examsCollection } from '@/data/store';
 import type { Assignment, Course, Exam, Semester } from '@/data/types';
+import { posthog } from '@/utils/analytics';
 import { rtlAlign, rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 type StruggleKey = 'deadlines' | 'progress';
@@ -71,13 +72,33 @@ export default function OnboardingScreen() {
     return dueDates.length > 0 ? [...dueDates].sort((a, b) => a.localeCompare(b))[0] : null;
   }, [createdAssignments]);
 
+  useEffect(() => {
+    posthog.capture('onboarding_started');
+  }, []);
+
   function finish() {
     setStep(7);
+  }
+
+  function handleNameSubmit() {
+    posthog.capture('onboarding_name_submitted');
+    setStep(3);
+  }
+
+  function handleSelectStruggle(key: StruggleKey) {
+    setStruggle(key);
+    posthog.capture('onboarding_struggle_selected', { struggle: key });
   }
 
   function completeOnboarding() {
     setName(name);
     markOnboardingComplete();
+    posthog.capture('onboarding_completed', {
+      struggle,
+      course_count: createdCourses.length,
+      assignment_count: createdAssignments.length,
+      exam_count: createdExams.length,
+    });
   }
 
   function toggleCourse(entry: CourseCatalogEntry) {
@@ -162,6 +183,10 @@ export default function OnboardingScreen() {
       examsCollection.add(exam);
       setCreatedExams((prev) => [...prev, exam]);
     }
+    posthog.capture('onboarding_course_added', {
+      assignment_count: loopPending.length,
+      has_exam_date: !!loopExamDate,
+    });
     advanceCourseLoop();
   }
 
@@ -184,7 +209,7 @@ export default function OnboardingScreen() {
           body="ככה נוכל לדבר איתך בגובה העיניים."
           primaryLabel="נעים להכיר"
           primaryDisabled={!name.trim()}
-          onPrimary={() => setStep(3)}>
+          onPrimary={handleNameSubmit}>
           <View style={styles.nameField}>
             <ThemedTextInput value={name} onChangeText={setNameInput} placeholder="השם שלך" />
           </View>
@@ -201,11 +226,11 @@ export default function OnboardingScreen() {
             {STRUGGLE_OPTIONS.map((option) => {
               const selected = struggle === option.key;
               return (
-                <Pressable key={option.key} onPress={() => setStruggle(option.key)}>
+                <Pressable key={option.key} onPress={() => handleSelectStruggle(option.key)}>
                   <ThemedView type={selected ? 'backgroundSelected' : 'backgroundElement'} style={styles.optionRow}>
                     <ThemedText style={styles.optionEmoji}>{option.emoji}</ThemedText>
                     <ThemedText style={styles.optionLabel}>{option.label}</ThemedText>
-                    <TaskCheckbox checked={selected} onToggle={() => setStruggle(option.key)} />
+                    <TaskCheckbox checked={selected} onToggle={() => handleSelectStruggle(option.key)} />
                   </ThemedView>
                 </Pressable>
               );

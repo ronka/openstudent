@@ -8,6 +8,7 @@ import { Spacing } from '@/constants/theme';
 import { COURSE_LEVEL_LABELS, SEMESTERS } from '@/data/constants';
 import { coursesCollection } from '@/data/store';
 import type { Course, Semester } from '@/data/types';
+import { posthog } from '@/utils/analytics';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 /** Parse a numeric text field; empty or invalid → undefined. */
@@ -47,6 +48,7 @@ export function CourseFormModal({ visible, onClose, course }: { visible: boolean
       grade: toNumber(grade),
       notes: notes.trim() || undefined,
     });
+    posthog.capture('course_updated', { course_id: course.id });
     onClose();
   }
 

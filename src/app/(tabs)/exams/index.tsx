@@ -15,6 +15,7 @@ import { getCurrentSemester, isCurrentSemester } from '@/data/semester';
 import { examsCollection, useCourses, useExams } from '@/data/store';
 import type { Exam } from '@/data/types';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
+import { posthog } from '@/utils/analytics';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 type StatusFilter = 'all' | 'upcoming' | 'graded';
@@ -95,7 +96,10 @@ export default function ExamsScreen() {
               key={status}
               label={`${STATUS_FILTER_EMOJI[status]} ${STATUS_FILTER_LABELS[status]}`}
               selected={statusFilter === status}
-              onPress={() => setStatusFilter(status)}
+              onPress={() => {
+                setStatusFilter(status);
+                posthog.capture('exam_filter_changed', { filter_type: 'status', value: status });
+              }}
             />
           ))}
         </ScrollView>
@@ -103,12 +107,18 @@ export default function ExamsScreen() {
           <FilterChip
             label="🎓 הסמסטר הנוכחי"
             selected={semesterScope === 'current'}
-            onPress={() => setSemesterScope((scope) => (scope === 'current' ? 'all' : 'current'))}
+            onPress={() => {
+              setSemesterScope((scope) => (scope === 'current' ? 'all' : 'current'));
+              posthog.capture('exam_filter_changed', { filter_type: 'semester_scope' });
+            }}
           />
           <CourseFilterChip
             courses={filterableCourses}
             selectedCourseId={courseFilter === 'all' ? undefined : courseFilter}
-            onChange={(id) => setCourseFilter(id ?? 'all')}
+            onChange={(id) => {
+              setCourseFilter(id ?? 'all');
+              posthog.capture('exam_filter_changed', { filter_type: 'course', value: id ?? 'all' });
+            }}
             clearLabel="כל הקורסים"
           />
         </View>
@@ -120,7 +130,11 @@ export default function ExamsScreen() {
         renderItem={({ item }) => {
           const isPast = item.grade !== undefined;
           return (
-            <SwipeableRow onDelete={() => examsCollection.remove(item.id)}>
+            <SwipeableRow
+              onDelete={() => {
+                examsCollection.remove(item.id);
+                posthog.capture('exam_deleted', { exam_id: item.id, source: 'exams_list' });
+              }}>
               <Pressable onPress={() => openEdit(item)} style={({ pressed }) => pressed && styles.pressed}>
                 <EntityRow
                   title={item.title}

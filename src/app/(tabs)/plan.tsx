@@ -13,6 +13,7 @@ import { degreeStats } from '@/data/stats';
 import { useCourses } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import type { Course, Semester } from '@/data/types';
+import { posthog } from '@/utils/analytics';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 export default function PlanScreen() {
@@ -50,7 +51,12 @@ export default function PlanScreen() {
         keyExtractor={(course) => course.id}
         ListHeaderComponent={
           showPastCoursesNudge ? (
-            <Pressable onPress={() => setShowCatalogPicker(true)} style={styles.nudgeWrapper}>
+            <Pressable
+              onPress={() => {
+                posthog.capture('plan_add_past_courses_nudge_tapped');
+                setShowCatalogPicker(true);
+              }}
+              style={styles.nudgeWrapper}>
               <ThemedView type="accentSoft" style={styles.nudge}>
                 <ThemedText type="smallBold" themeColor="accent" style={styles.nudgeText}>
                   רוצה לראות התקדמות בתואר? הוסיפו קורסים שכבר עברת 🧭
@@ -86,6 +92,7 @@ export default function PlanScreen() {
                   subtitle={[item.courseNumber, item.faculty].filter(Boolean).join(' · ')}
                   trailing={<Badge label={COURSE_STATUS_LABELS[status]} tone={COURSE_STATUS_TONES[status]} />}
                   href={`/courses/${item.id}`}
+                  onPress={() => posthog.capture('plan_row_tapped', { course_id: item.id })}
                 />
               </View>
             </View>
@@ -110,7 +117,12 @@ export default function PlanScreen() {
         }
       />
 
-      <CourseCatalogPicker visible={showCatalogPicker} onClose={() => setShowCatalogPicker(false)} onAdded={() => setShowCatalogPicker(false)} />
+      <CourseCatalogPicker
+        visible={showCatalogPicker}
+        onClose={() => setShowCatalogPicker(false)}
+        onAdded={() => setShowCatalogPicker(false)}
+        source="plan"
+      />
     </ThemedView>
   );
 }

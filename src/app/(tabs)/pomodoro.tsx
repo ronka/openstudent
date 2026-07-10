@@ -6,6 +6,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
+import { posthog } from '@/utils/analytics';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 const FOCUS_DURATION_SECONDS = 25 * 60;
@@ -50,6 +51,10 @@ export default function PomodoroScreen() {
     return () => clearInterval(interval);
   }, [isRunning]);
 
+  useEffect(() => {
+    if (isComplete) posthog.capture('pomodoro_completed');
+  }, [isComplete]);
+
   // Keep the screen on while the timer is counting down, so a focus session
   // isn't interrupted by the device auto-locking.
   useEffect(() => {
@@ -65,16 +70,19 @@ export default function PomodoroScreen() {
     if (secondsLeft === 0) return;
     setIsComplete(false);
     setIsRunning(true);
+    posthog.capture('pomodoro_started');
   }
 
   function handlePause() {
     setIsRunning(false);
+    posthog.capture('pomodoro_paused', { seconds_left: secondsLeft });
   }
 
   function handleReset() {
     setIsRunning(false);
     setIsComplete(false);
     setSecondsLeft(FOCUS_DURATION_SECONDS);
+    posthog.capture('pomodoro_reset');
   }
 
   return (

@@ -10,6 +10,7 @@ import { SEMESTERS } from '@/data/constants';
 import { getCurrentSemester, getYearOptions } from '@/data/semester';
 import { PLATFORM_EMOJI, PLATFORM_LABELS, detectPlatform } from '@/data/study-groups';
 import type { Semester } from '@/data/types';
+import { posthog } from '@/utils/analytics';
 import { rtlTextAlign } from '@/utils/rtl';
 
 const YEAR_OPTIONS = getYearOptions();
@@ -73,14 +74,17 @@ export function SubmitGroupLinkForm({
 
       if (!response.ok) {
         const data = await response.json().catch(() => null);
+        posthog.capture('study_group_link_submit_failed', { course_number: courseNumber, reason: data?.error ?? 'server_error' });
         Alert.alert('שגיאה', data?.error ?? 'שליחת הקישור נכשלה');
         return;
       }
 
+      posthog.capture('study_group_link_submitted', { course_number: courseNumber, platform, semester, year });
       onSubmitted?.();
       Alert.alert('נשלח', 'הקישור נוסף בהצלחה');
       onClose();
     } catch {
+      posthog.capture('study_group_link_submit_failed', { course_number: courseNumber, reason: 'network_error' });
       Alert.alert('שגיאה', 'שליחת הקישור נכשלה');
     } finally {
       setSubmitting(false);

@@ -17,6 +17,7 @@ import { deriveCourseStatus, getCurrentSemester } from '@/data/semester';
 import { coursesCollection, useCourses } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import type { Course, CourseStatus } from '@/data/types';
+import { posthog } from '@/utils/analytics';
 import { rtlFlexDirection, rtlMargin, rtlTextAlign } from '@/utils/rtl';
 
 type StatusFilter = 'all' | CourseStatus;
@@ -31,7 +32,11 @@ const STATUS_FILTER_EMOJI: Record<StatusFilter, string> = {
 function CourseRow({ course, current }: { course: Course; current: ReturnType<typeof getCurrentSemester> }) {
   const status = deriveCourseStatus(course, current);
   return (
-    <SwipeableRow onDelete={() => coursesCollection.remove(course.id)}>
+    <SwipeableRow
+      onDelete={() => {
+        coursesCollection.remove(course.id);
+        posthog.capture('course_deleted', { course_id: course.id, source: 'courses_list' });
+      }}>
       <Link href={{ pathname: '/courses/[id]', params: { id: course.id } }} asChild>
         <Pressable style={({ pressed }) => pressed && styles.rowPressed}>
           <ThemedView type="backgroundElement" style={styles.row}>
@@ -92,14 +97,20 @@ export default function CoursesScreen() {
           <FilterChip
             label={`${STATUS_FILTER_EMOJI.all} הכל`}
             selected={statusFilter === 'all'}
-            onPress={() => setStatusFilter('all')}
+            onPress={() => {
+              setStatusFilter('all');
+              posthog.capture('course_filter_changed', { filter_type: 'status', value: 'all' });
+            }}
           />
           {COURSE_STATUSES.map((status) => (
             <FilterChip
               key={status}
               label={`${STATUS_FILTER_EMOJI[status]} ${COURSE_STATUS_LABELS[status]}`}
               selected={statusFilter === status}
-              onPress={() => setStatusFilter(status)}
+              onPress={() => {
+                setStatusFilter(status);
+                posthog.capture('course_filter_changed', { filter_type: 'status', value: status });
+              }}
             />
           ))}
         </ScrollView>
@@ -107,7 +118,10 @@ export default function CoursesScreen() {
           <CourseFilterChip
             courses={courses}
             selectedCourseId={courseFilter === 'all' ? undefined : courseFilter}
-            onChange={(id) => setCourseFilter(id ?? 'all')}
+            onChange={(id) => {
+              setCourseFilter(id ?? 'all');
+              posthog.capture('course_filter_changed', { filter_type: 'course', value: id ?? 'all' });
+            }}
             clearLabel="כל הקורסים"
           />
         </View>

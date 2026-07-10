@@ -8,6 +8,7 @@ import { FormSheet, SheetButton } from '@/components/form-sheet';
 import { Spacing } from '@/constants/theme';
 import { examsCollection, useCourses } from '@/data/store';
 import type { Exam } from '@/data/types';
+import { posthog } from '@/utils/analytics';
 
 /** Parse a numeric text field; empty or invalid → undefined. */
 function toNumber(value: string): number | undefined {
@@ -22,11 +23,14 @@ export function ExamFormModal({
   onClose,
   initialCourseId,
   exam,
+  source = 'exams_list',
 }: {
   visible: boolean;
   onClose: () => void;
   initialCourseId?: string;
   exam?: Exam;
+  /** Entry point this modal was opened from, tagged onto captured events. */
+  source?: 'exams_list' | 'course_detail';
 }) {
   const courses = useCourses();
 
@@ -78,10 +82,17 @@ export function ExamFormModal({
       grade: toNumber(grade),
     };
 
+    const gradeNewlyEntered = payload.grade !== undefined && payload.grade !== exam?.grade;
+
     if (exam) {
       examsCollection.update(exam.id, payload);
+      posthog.capture('exam_updated', { exam_id: exam.id, course_id: courseId, source });
     } else {
       examsCollection.add(payload);
+      posthog.capture('exam_created', { exam_id: payload.id, course_id: courseId, source });
+    }
+    if (gradeNewlyEntered) {
+      posthog.capture('exam_grade_entered', { exam_id: payload.id, grade: payload.grade ?? null, source });
     }
     onClose();
   }
@@ -95,6 +106,7 @@ export function ExamFormModal({
         style: 'destructive',
         onPress: () => {
           examsCollection.remove(exam.id);
+          posthog.capture('exam_deleted', { exam_id: exam.id, source });
           onClose();
         },
       },

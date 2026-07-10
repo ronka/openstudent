@@ -24,6 +24,7 @@ import {
 } from '@/data/store';
 import type { Exam } from '@/data/types';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
+import { posthog } from '@/utils/analytics';
 import { rtlFlexDirection, rtlMargin, rtlTextAlign } from '@/utils/rtl';
 
 export default function CourseDetailScreen() {
@@ -64,6 +65,7 @@ export default function CourseDetailScreen() {
         style: 'destructive',
         onPress: () => {
           coursesCollection.remove(course.id);
+          posthog.capture('course_deleted', { course_id: course.id, source: 'course_detail' });
           router.back();
         },
       },
@@ -126,9 +128,16 @@ export default function CourseDetailScreen() {
                 leading={
                   <TaskCheckbox
                     checked={checked}
-                    onToggle={() =>
-                      assignmentsCollection.update(assignment.id, { status: checked ? 'todo' : 'done' })
-                    }
+                    onToggle={() => {
+                      const toStatus = checked ? 'todo' : 'done';
+                      assignmentsCollection.update(assignment.id, { status: toStatus });
+                      posthog.capture('assignment_status_toggled', {
+                        assignment_id: assignment.id,
+                        from_status: assignment.status,
+                        to_status: toStatus,
+                        source: 'course_detail',
+                      });
+                    }}
                   />
                 }
                 href={`/assignments/${assignment.id}`}
@@ -173,6 +182,7 @@ export default function CourseDetailScreen() {
         onClose={() => setShowExamForm(false)}
         initialCourseId={course.id}
         exam={editingExam}
+        source="course_detail"
       />
     </ThemedView>
   );

@@ -60,6 +60,7 @@ export function HighlightCard({
   trailing,
   href,
   style,
+  onPress,
 }: {
   tone: HighlightTone;
   soft?: boolean;
@@ -70,6 +71,7 @@ export function HighlightCard({
   trailing?: ReactNode;
   href?: string;
   style?: StyleProp<ViewStyle>;
+  onPress?: () => void;
 }) {
   const bg = soft ? TONE_SOFT_BG[tone] : TONE_BG[tone];
   const fg = soft ? TONE_SOFT_FG[tone] : TONE_FG[tone];
@@ -109,7 +111,7 @@ export function HighlightCard({
   // like fullWidth) must live on it; the inner Box just fills it.
   return (
     <Link href={href as Href} asChild>
-      <Pressable style={({ pressed }) => [styles.pressable, style, pressed && styles.pressed]}>
+      <Pressable onPress={onPress} style={({ pressed }) => [styles.pressable, style, pressed && styles.pressed]}>
         <Box className={bg} style={styles.card}>
           {body}
         </Box>

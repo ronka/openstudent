@@ -18,6 +18,7 @@ import { getYearOptions } from '@/data/semester';
 import { PLATFORM_EMOJI, PLATFORM_LABELS, type StudyGroupLink } from '@/data/study-groups';
 import type { Semester } from '@/data/types';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
+import { posthog } from '@/utils/analytics';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 const YEAR_OPTIONS = getYearOptions();
@@ -86,13 +87,26 @@ export default function StudyGroupsScreen() {
   );
 
   function openLink(link: StudyGroupLink) {
+    posthog.capture('study_group_link_opened', { link_id: link.id, course_number: link.courseNumber, platform: link.platform });
     openBrowserAsync(link.url);
   }
 
   function onReport(link: StudyGroupLink) {
     Alert.alert('דיווח על קישור', 'מה הבעיה?', [
-      { text: 'לא עובד', onPress: () => reportLink(link, 'not-working') },
-      { text: 'לא רלוונטי', onPress: () => reportLink(link, 'not-relevant') },
+      {
+        text: 'לא עובד',
+        onPress: () => {
+          reportLink(link, 'not-working');
+          posthog.capture('study_group_link_reported', { link_id: link.id, reason: 'not-working' });
+        },
+      },
+      {
+        text: 'לא רלוונטי',
+        onPress: () => {
+          reportLink(link, 'not-relevant');
+          posthog.capture('study_group_link_reported', { link_id: link.id, reason: 'not-relevant' });
+        },
+      },
       { text: 'ביטול', style: 'cancel' },
     ]);
   }
@@ -101,31 +115,54 @@ export default function StudyGroupsScreen() {
     <ThemedView style={styles.container}>
       <View style={styles.filters}>
         <View style={styles.chipRow}>
-          <CatalogFilterChip selectedCourseNumber={courseFilter} onChange={setCourseFilter} clearLabel="כל הקורסים" />
+          <CatalogFilterChip
+            selectedCourseNumber={courseFilter}
+            onChange={(id) => {
+              setCourseFilter(id);
+              posthog.capture('study_group_filter_changed', { filter_type: 'course', value: id ?? 'all' });
+            }}
+            clearLabel="כל הקורסים"
+          />
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
           <FilterChip
             label="כל הסמסטרים"
             selected={semesterFilter === 'all'}
-            onPress={() => setSemesterFilter('all')}
+            onPress={() => {
+              setSemesterFilter('all');
+              posthog.capture('study_group_filter_changed', { filter_type: 'semester', value: 'all' });
+            }}
           />
           {SEMESTERS.map((semester) => (
             <FilterChip
               key={semester}
               label={`סמסטר ${semester}`}
               selected={semesterFilter === semester}
-              onPress={() => setSemesterFilter(semester)}
+              onPress={() => {
+                setSemesterFilter(semester);
+                posthog.capture('study_group_filter_changed', { filter_type: 'semester', value: semester });
+              }}
             />
           ))}
         </ScrollView>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-          <FilterChip label="כל השנים" selected={yearFilter === 'all'} onPress={() => setYearFilter('all')} />
+          <FilterChip
+            label="כל השנים"
+            selected={yearFilter === 'all'}
+            onPress={() => {
+              setYearFilter('all');
+              posthog.capture('study_group_filter_changed', { filter_type: 'year', value: 'all' });
+            }}
+          />
           {YEAR_OPTIONS.map((year) => (
             <FilterChip
               key={year}
               label={String(year)}
               selected={yearFilter === year}
-              onPress={() => setYearFilter(year)}
+              onPress={() => {
+                setYearFilter(year);
+                posthog.capture('study_group_filter_changed', { filter_type: 'year', value: year });
+              }}
             />
           ))}
         </ScrollView>

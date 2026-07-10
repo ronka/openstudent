@@ -10,6 +10,7 @@ import { Spacing } from '@/constants/theme';
 import { ASSIGNMENT_TYPE_LABELS, ASSIGNMENT_TYPES, assignmentNumbers, getAssignmentName } from '@/data/constants';
 import { assignmentsCollection, useAssignments, useCourses } from '@/data/store';
 import type { Assignment, AssignmentType } from '@/data/types';
+import { posthog } from '@/utils/analytics';
 import { rtlTextAlign } from '@/utils/rtl';
 
 /** First task number in the type's range not yet used by that course. */
@@ -98,8 +99,15 @@ export function AssignmentFormModal({
 
     if (assignment) {
       assignmentsCollection.update(assignment.id, payload);
+      posthog.capture('assignment_updated', { assignment_id: assignment.id, course_id: courseId, type });
     } else {
       assignmentsCollection.add(payload);
+      posthog.capture('assignment_created', {
+        assignment_id: payload.id,
+        course_id: courseId,
+        type,
+        has_due_date: !!payload.dueDate,
+      });
     }
     onClose();
   }

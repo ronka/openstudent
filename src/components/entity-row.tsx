@@ -13,12 +13,14 @@ export function EntityRow({
   leading,
   trailing,
   href,
+  onPress,
 }: {
   title: string;
   subtitle?: string;
   leading?: ReactNode;
   trailing?: ReactNode;
   href?: string;
+  onPress?: () => void;
 }) {
   const content = (
     <ThemedView type="backgroundElement" style={styles.row}>
@@ -39,7 +41,7 @@ export function EntityRow({
 
   return (
     <Link href={href as Href} asChild>
-      <Pressable style={({ pressed }) => pressed && styles.pressed}>{content}</Pressable>
+      <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>{content}</Pressable>
     </Link>
   );
 }
