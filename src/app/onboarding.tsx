@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CourseCatalogList } from '@/components/course-catalog-list';
@@ -34,11 +33,26 @@ const REFLECTION_COPY: Record<StruggleKey, string> = {
   progress: 'קיבלנו. תמיד תדעו בדיוק כמה נק״ז נשארו ומה הממוצע — בלי אקסל.',
 };
 
+/** Shown on screen-3 reflection when both goals are selected — one line instead of two. */
+const REFLECTION_COPY_BOTH =
+  'קיבלנו. אף תאריך הגשה לא יתפספס, ותמיד תדעו איפה אתם עומדים בתואר — הכול במקום אחד.';
+
 /** Summary-screen echo of the screen-2 answer, tying the finished setup back to it. */
 const SUMMARY_MIRROR_COPY: Record<StruggleKey, string> = {
   deadlines: '🎯 מעכשיו כל תאריך הגשה מחכה לכם כאן — לא יותר בלגן בין מיילים.',
   progress: '🎯 מעכשיו תדעו תמיד איפה אתם עומדים בתואר — במקום אחד.',
 };
+
+const SUMMARY_MIRROR_COPY_BOTH =
+  '🎯 מעכשיו כל תאריך הגשה מחכה לכם כאן ותמיד תדעו איפה אתם עומדים בתואר — הכול במקום אחד.';
+
+/** Picks the reflection/summary line for the chosen goals: a combined line when both are
+ * selected, the single-goal line otherwise. Order-independent (works on a Set). */
+function copyForStruggles(struggles: Set<StruggleKey>, single: Record<StruggleKey, string>, both: string): string {
+  if (struggles.has('deadlines') && struggles.has('progress')) return both;
+  if (struggles.has('deadlines')) return single.deadlines;
+  return single.progress;
+}
 
 /** Total onboarding screens in the finished flow (§4) — dots render for all six even
  * before later steps exist, so Tasks 4–6 only need to add step branches, not this UI. */
@@ -50,14 +64,14 @@ export default function OnboardingScreen() {
 
   const [step, setStep] = useState(1);
   const [name, setNameInput] = useState('');
-  const [struggle, setStruggle] = useState<StruggleKey | null>(null);
+  const [struggles, setStruggles] = useState<Set<StruggleKey>>(new Set());
 
   const [selectedCourses, setSelectedCourses] = useState<Set<string>>(new Set());
   const [year, setYear] = useState(current.year);
   const [semester, setSemester] = useState<Semester>(current.term);
   const [editingSemester, setEditingSemester] = useState(false);
 
-  const [createdCourses, setCreatedCourses] = useState<{ id: string; name: string }[]>([]);
+  const [createdCourses, setCreatedCourses] = useState<Course[]>([]);
   const [courseLoopIndex, setCourseLoopIndex] = useState(0);
   const [loopMamanCount, setLoopMamanCount] = useState(0);
   const [loopMamachCount, setLoopMamachCount] = useState(0);
@@ -85,16 +99,29 @@ export default function OnboardingScreen() {
     setStep(3);
   }
 
-  function handleSelectStruggle(key: StruggleKey) {
-    setStruggle(key);
-    posthog.capture('onboarding_struggle_selected', { struggle: key });
+  function handleToggleStruggle(key: StruggleKey) {
+    const selected = !struggles.has(key);
+    setStruggles((prev) => {
+      const next = new Set(prev);
+      if (selected) next.add(key);
+      else next.delete(key);
+      return next;
+    });
+    // Fire only on select — the event name means "a goal was picked"; toggling one off
+    // is not a selection and must not inflate the count.
+    if (selected) posthog.capture('onboarding_struggle_selected', { struggle: key });
   }
 
   function completeOnboarding() {
+    // Nothing is persisted during the flow; flush the whole plan atomically here, right
+    // before the app un-gates, so bailing out mid-onboarding never leaves orphan rows.
+    coursesCollection.addMany(createdCourses);
+    assignmentsCollection.addMany(createdAssignments);
+    examsCollection.addMany(createdExams);
     setName(name);
     markOnboardingComplete();
     posthog.capture('onboarding_completed', {
-      struggle,
+      struggles: Array.from(struggles),
       course_count: createdCourses.length,
       assignment_count: createdAssignments.length,
       exam_count: createdExams.length,
@@ -126,8 +153,7 @@ export default function OnboardingScreen() {
         year,
         semester,
       };
-      coursesCollection.add(course);
-      return { id: course.id, name: course.name };
+      return course; // held locally; persisted only in completeOnboarding
     });
 
     if (created.length === 0) {
@@ -135,6 +161,8 @@ export default function OnboardingScreen() {
       return;
     }
     setCreatedCourses(created);
+    setCreatedAssignments([]);
+    setCreatedExams([]);
     setCourseLoopIndex(0);
     resetLoopForm();
     setStep(6);
@@ -171,16 +199,43 @@ export default function OnboardingScreen() {
     }
   }
 
+  /** Drop the locally-built course plan so returning to the selection step (step 5) starts
+   * fresh. Nothing is persisted until completeOnboarding, so this is a plain state reset —
+   * no DB cleanup. `selectedCourses` is intentionally preserved so their picks are shown. */
+  function resetCourseLoop() {
+    setCreatedCourses([]);
+    setCreatedAssignments([]);
+    setCreatedExams([]);
+    setCourseLoopIndex(0);
+    resetLoopForm();
+  }
+
+  function goBack() {
+    switch (step) {
+      case 6:
+      case 7:
+        // The course loop (and the summary after it) is treated as one unit: Back returns
+        // to course selection and drops the plan built on the way in, so re-picking — or
+        // skipping — never carries stale rows into the final flush. Per-course task editing
+        // happens later in-app (plan R1). `selectedCourses` is preserved, so the user lands
+        // back on their picks.
+        resetCourseLoop();
+        setStep(5);
+        return;
+      default:
+        // Linear steps 2–5 decrement; step 1 has no back (the control is hidden there).
+        setStep((prev) => Math.max(1, prev - 1));
+    }
+  }
+
   function saveCourseLoopStep() {
     const course = createdCourses[courseLoopIndex];
     if (loopPending.length > 0) {
       const payloads = buildAssignmentPayloads(course.id, loopPending);
-      assignmentsCollection.addMany(payloads);
       setCreatedAssignments((prev) => [...prev, ...payloads]);
     }
     if (loopExamDate) {
       const exam: Exam = { id: `e-${Date.now()}-${courseLoopIndex}`, title: course.name, courseId: course.id, date: loopExamDate };
-      examsCollection.add(exam);
       setCreatedExams((prev) => [...prev, exam]);
     }
     posthog.capture('onboarding_course_added', {
@@ -191,8 +246,25 @@ export default function OnboardingScreen() {
   }
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top + Spacing.four, paddingBottom: insets.bottom + Spacing.four }]}>
-      <ProgressDots current={step} total={TOTAL_STEPS} />
+    <ThemedView
+      type="background"
+      style={[styles.root, { paddingTop: insets.top + Spacing.four, paddingBottom: insets.bottom + Spacing.four }]}>
+      <View style={styles.header}>
+        <View style={styles.headerSide}>
+          {step > 1 && (
+            <Pressable
+              onPress={goBack}
+              hitSlop={12}
+              style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
+              <ThemedText type="smallBold" themeColor="text" style={styles.backText}>
+                ‹ חזרה
+              </ThemedText>
+            </Pressable>
+          )}
+        </View>
+        <ProgressDots current={step} total={TOTAL_STEPS} />
+        <View style={styles.headerSide} />
+      </View>
 
       {step === 1 && (
         <OnboardingStep
@@ -219,18 +291,19 @@ export default function OnboardingScreen() {
       {step === 3 && (
         <OnboardingStep
           headline="מה הכי מציק לך בלימודים?"
+          body="אפשר לבחור יותר מאחד."
           primaryLabel="המשך"
-          primaryDisabled={!struggle}
+          primaryDisabled={struggles.size === 0}
           onPrimary={() => setStep(4)}>
           <View style={styles.optionList}>
             {STRUGGLE_OPTIONS.map((option) => {
-              const selected = struggle === option.key;
+              const selected = struggles.has(option.key);
               return (
-                <Pressable key={option.key} onPress={() => handleSelectStruggle(option.key)}>
+                <Pressable key={option.key} onPress={() => handleToggleStruggle(option.key)}>
                   <ThemedView type={selected ? 'backgroundSelected' : 'backgroundElement'} style={styles.optionRow}>
                     <ThemedText style={styles.optionEmoji}>{option.emoji}</ThemedText>
                     <ThemedText style={styles.optionLabel}>{option.label}</ThemedText>
-                    <TaskCheckbox checked={selected} onToggle={() => handleSelectStruggle(option.key)} />
+                    <TaskCheckbox checked={selected} onToggle={() => handleToggleStruggle(option.key)} />
                   </ThemedView>
                 </Pressable>
               );
@@ -239,9 +312,9 @@ export default function OnboardingScreen() {
         </OnboardingStep>
       )}
 
-      {step === 4 && struggle && (
+      {step === 4 && struggles.size > 0 && (
         <OnboardingStep
-          headline={REFLECTION_COPY[struggle]}
+          headline={copyForStruggles(struggles, REFLECTION_COPY, REFLECTION_COPY_BOTH)}
           body="נתחיל מהסמסטר הנוכחי — זה לוקח דקה."
           primaryLabel="יאללה"
           onPrimary={() => setStep(5)}
@@ -249,7 +322,7 @@ export default function OnboardingScreen() {
       )}
 
       {step === 5 && (
-        <Animated.View entering={FadeIn.duration(240)} exiting={FadeOut.duration(120)} style={styles.step4Container}>
+        <View style={styles.step4Container}>
           <View style={styles.step4Body}>
             <ThemedText type="subtitle" style={styles.headline}>
               אילו קורסים לומדים הסמסטר? 📖
@@ -311,11 +384,11 @@ export default function OnboardingScreen() {
               </ThemedText>
             </Pressable>
           </View>
-        </Animated.View>
+        </View>
       )}
 
       {step === 6 && createdCourses[courseLoopIndex] && (
-        <Animated.View entering={FadeIn.duration(240)} exiting={FadeOut.duration(120)} style={styles.step4Container}>
+        <View style={styles.step4Container}>
           <ScrollView contentContainerStyle={styles.step5Body} keyboardShouldPersistTaps="handled">
             <ThemedText type="subtitle" style={styles.headline}>
               {`קורס ${courseLoopIndex + 1}/${createdCourses.length} · ${createdCourses[courseLoopIndex].name}`}
@@ -365,11 +438,11 @@ export default function OnboardingScreen() {
               </ThemedText>
             </Pressable>
           </View>
-        </Animated.View>
+        </View>
       )}
 
       {step === 7 && (
-        <Animated.View entering={FadeIn.duration(240)} exiting={FadeOut.duration(120)} style={styles.step}>
+        <View style={styles.step}>
           <ScrollView contentContainerStyle={styles.stepBody}>
             {createdCourses.length === 0 ? (
               <>
@@ -395,9 +468,9 @@ export default function OnboardingScreen() {
                     </ThemedText>
                   )}
                 </DashboardCard>
-                {struggle && (
+                {struggles.size > 0 && (
                   <ThemedText themeColor="textSecondary" style={styles.body}>
-                    {SUMMARY_MIRROR_COPY[struggle]}
+                    {copyForStruggles(struggles, SUMMARY_MIRROR_COPY, SUMMARY_MIRROR_COPY_BOTH)}
                   </ThemedText>
                 )}
                 <ThemedText type="small" themeColor="textSecondary" style={styles.body}>
@@ -414,9 +487,9 @@ export default function OnboardingScreen() {
               </ThemedText>
             </ThemedView>
           </Pressable>
-        </Animated.View>
+        </View>
       )}
-    </View>
+    </ThemedView>
   );
 }
 
@@ -439,7 +512,7 @@ function OnboardingStep({
   onPrimary: () => void;
 }) {
   return (
-    <Animated.View entering={FadeIn.duration(240)} exiting={FadeOut.duration(120)} style={styles.step}>
+    <View style={styles.step}>
       <View style={styles.stepBody}>
         <ThemedText type="subtitle" style={styles.headline}>
           {headline}
@@ -459,7 +532,7 @@ function OnboardingStep({
           </ThemedText>
         </ThemedView>
       </Pressable>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -478,11 +551,28 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: Spacing.four,
   },
+  header: {
+    flexDirection: rtlFlexDirection.row,
+    alignItems: 'center',
+    marginBottom: Spacing.five,
+    justifyContent: 'space-between',
+  },
+  headerSide: {
+    flex: 1,
+    paddingHorizontal: Spacing.three,
+    justifyContent: 'center',
+  },
+  backButton: {
+    alignSelf: rtlAlign.start,
+    paddingVertical: Spacing.one,
+  },
+  backText: {
+    textAlign: rtlTextAlign.start,
+  },
   dotsRow: {
     flexDirection: rtlFlexDirection.row,
     justifyContent: 'center',
     gap: Spacing.two,
-    marginBottom: Spacing.five,
   },
   dot: {
     width: 8,

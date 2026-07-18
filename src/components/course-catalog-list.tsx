@@ -51,7 +51,10 @@ export function CourseCatalogList({
           };
           return (
             <Pressable key={entry.courseNumber} onPress={press} disabled={enrolled}>
-              <ThemedView type="backgroundElement" style={[styles.row, enrolled && styles.rowDisabled]}>
+              <ThemedView
+                type="backgroundElement"
+                className="border border-border"
+                style={[styles.row, enrolled && styles.rowDisabled]}>
                 <TaskCheckbox checked={checked} onToggle={press} />
                 <View style={styles.rowMain}>
                   <ThemedText style={styles.rowTitle}>{entry.name}</ThemedText>

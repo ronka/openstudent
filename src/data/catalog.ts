@@ -15,6 +15,8 @@ export interface CourseCatalogEntry {
 }
 
 export const COURSE_CATALOG: CourseCatalogEntry[] = [
+  { courseNumber: '20109', name: 'אלגברה לינארית 1', faculty: 'מתמטיקה', credits: 7, type: 'חובה', level: 'ר' },
+  { courseNumber: '20417', name: 'אלגוריתמים', faculty: 'מדעי המחשב', credits: 5, type: 'חובה', level: 'ר' },
   { courseNumber: '20462', name: 'אנליזה נומרית 1', faculty: 'מדעי המחשב', credits: 4, type: 'בחירה', level: 'ר' },
   { courseNumber: '20900', name: 'אנליזה נומרית 2', faculty: 'מדעי המחשב', credits: 4, type: 'בחירה', level: 'מ' },
   { courseNumber: '20471', name: 'ארגון המחשב', faculty: 'מדעי המחשב', credits: 4, type: 'בחירה', level: 'ר' },
