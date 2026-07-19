@@ -13,6 +13,7 @@ import { useHasCompletedOnboarding } from '@/data/onboarding';
 import { useScreenViewTracking } from '@/hooks/use-screen-view';
 import { posthog } from '@/utils/analytics';
 import { initializeRTL } from '@/utils/rtl';
+import { initWidgets } from '@/widgets/updater';
 
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/src/global.css';
@@ -56,6 +57,7 @@ function AppNavigation() {
 export default function RootLayout() {
   useEffect(() => {
     initializeRTL();
+    initWidgets();
   }, []);
 
   // Keep local reminders in sync with the data: reconcile once on start, then on every

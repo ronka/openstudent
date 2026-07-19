@@ -54,6 +54,33 @@
         {
           "color": "#ffffff"
         }
+      ],
+      [
+        "expo-widgets",
+        {
+          "bundleIdentifier": "com.ronkaa.openstudent.widgets",
+          "groupIdentifier": "group.com.ronkaa.openstudent",
+          "widgets": [
+            {
+              "name": "DeadlinesWidget",
+              "displayName": "מטלות קרובות",
+              "description": "המטלות הפתוחות הקרובות ביותר",
+              "ios": { "supportedFamilies": ["systemSmall", "systemMedium"] }
+            },
+            {
+              "name": "ExamWidget",
+              "displayName": "המבחן הבא",
+              "description": "ספירה לאחור למבחן הקרוב",
+              "ios": { "supportedFamilies": ["systemSmall"] }
+            },
+            {
+              "name": "ProgressWidget",
+              "displayName": "התקדמות בתואר",
+              "description": "אחוז השלמת התואר והממוצע",
+              "ios": { "supportedFamilies": ["systemSmall"] }
+            }
+          ]
+        }
       ]
     ],
     "extra": {
