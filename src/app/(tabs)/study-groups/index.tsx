@@ -18,13 +18,14 @@ import { PLATFORM_EMOJI, PLATFORM_LABELS, type StudyGroupLink } from '@/data/stu
 import type { Semester } from '@/data/types';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { posthog } from '@/utils/analytics';
+import { apiUrl } from '@/utils/api-origin';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 const YEAR_OPTIONS = getYearOptions();
 
 async function reportLink(link: StudyGroupLink, reason: string) {
   try {
-    await fetch(`/api/study-groups/${link.id}/report`, {
+    await fetch(apiUrl(`/api/study-groups/${link.id}/report`), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason }),
@@ -51,7 +52,7 @@ export default function StudyGroupsScreen() {
     if (!silent) setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/study-groups');
+      const response = await fetch(apiUrl('/api/study-groups'));
       if (!response.ok) throw new Error(`Request failed: ${response.status}`);
       const data: StudyGroupLink[] = await response.json();
       setLinks(data);

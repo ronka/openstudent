@@ -1,4 +1,5 @@
 import type { CourseCatalogEntry } from '@/data/catalog';
+import { apiUrl } from '@/utils/api-origin';
 
 export interface CatalogPage {
   rows: CourseCatalogEntry[];
@@ -25,14 +26,14 @@ export async function fetchCatalogPage({
   params.set('page', String(page));
   if (pageSize) params.set('pageSize', String(pageSize));
 
-  const response = await fetch(`/api/catalog?${params.toString()}`);
+  const response = await fetch(apiUrl(`/api/catalog?${params.toString()}`));
   if (!response.ok) throw new Error(`Catalog request failed: ${response.status}`);
   return response.json();
 }
 
 /** Resolves a course number to its full catalog entry. */
 export async function fetchCatalogEntry(courseNumber: string): Promise<CourseCatalogEntry | undefined> {
-  const response = await fetch(`/api/catalog?ids=${encodeURIComponent(courseNumber)}`);
+  const response = await fetch(apiUrl(`/api/catalog?ids=${encodeURIComponent(courseNumber)}`));
   if (!response.ok) throw new Error(`Catalog lookup failed: ${response.status}`);
   const data: { rows: CourseCatalogEntry[] } = await response.json();
   return data.rows[0];

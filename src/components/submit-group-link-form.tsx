@@ -11,6 +11,7 @@ import { getCurrentSemester, getYearOptions } from '@/data/semester';
 import { PLATFORM_EMOJI, PLATFORM_LABELS, detectPlatform } from '@/data/study-groups';
 import type { Semester } from '@/data/types';
 import { posthog } from '@/utils/analytics';
+import { apiUrl } from '@/utils/api-origin';
 import { rtlTextAlign } from '@/utils/rtl';
 
 const YEAR_OPTIONS = getYearOptions();
@@ -66,7 +67,7 @@ export function SubmitGroupLinkForm({
 
     setSubmitting(true);
     try {
-      const response = await fetch('/api/study-groups', {
+      const response = await fetch(apiUrl('/api/study-groups'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ courseNumber, year, semester, url: url.trim() }),

@@ -34,7 +34,12 @@
       "output": "server"
     },
     "plugins": [
-      "expo-router",
+      [
+        "expo-router",
+        {
+          "origin": "https://openstudent.expo.app"
+        }
+      ],
       "expo-localization",
       [
         "expo-splash-screen",
