@@ -32,6 +32,7 @@ export function ChipField<T>({
   getLabel,
   getKey = (option) => String(option),
   scroll = false,
+  reverse = false,
 }: {
   label: string;
   options: readonly T[];
@@ -40,10 +41,11 @@ export function ChipField<T>({
   getLabel: (option: T) => string;
   getKey?: (option: T) => string | number;
   scroll?: boolean;
+  reverse?: boolean;
 }) {
-  const chips = options.map((option) => (
+  const chips = options.map((option, index) => (
     <FilterChip
-      key={getKey(option)}
+      key={reverse ? options.length - index - 1 : getKey(option)}
       label={getLabel(option)}
       selected={isSelected(option)}
       onPress={() => onSelect(option)}

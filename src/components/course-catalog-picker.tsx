@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { useResponsiveListHeight } from '@/components/async-list-area';
+import { CourseCatalogList } from '@/components/course-catalog-list';
 import { ChipField } from '@/components/form-fields';
 import { FormSheet, SheetButton } from '@/components/form-sheet';
-import { CourseCatalogList } from '@/components/course-catalog-list';
 import { Spacing } from '@/constants/theme';
 import type { CourseCatalogEntry } from '@/data/catalog';
 import { SEMESTERS } from '@/data/constants';
@@ -92,6 +92,7 @@ export function CourseCatalogPicker({
         <ChipField
           label="שנה"
           scroll
+          reverse
           options={YEAR_OPTIONS}
           getLabel={String}
           isSelected={(option) => year === option}
