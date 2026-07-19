@@ -1,11 +1,33 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Keyboard, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing } from '@/constants/theme';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
+
+/**
+ * Current keyboard height on iOS, 0 when hidden. Android is left at 0 — it
+ * relies on the native window resize (softwareKeyboardLayoutMode) instead, so
+ * adding our own lift there would double up.
+ */
+function useKeyboardHeight(): number {
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    const show = Keyboard.addListener('keyboardWillShow', (e) => setHeight(e.endCoordinates.height));
+    const hide = Keyboard.addListener('keyboardWillHide', () => setHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
+  return height;
+}
 
 /**
  * Slide-up bottom sheet used by the create/edit forms. Tapping the dimmed
@@ -24,12 +46,23 @@ export function FormSheet({
   children: ReactNode;
 }) {
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
+
+  // Lift the sheet above the keyboard on iOS. KeyboardAvoidingView is unreliable
+  // inside a transparent Modal, so we track the height ourselves and shift the
+  // sheet up via marginBottom (which doesn't grow it into the maxHeight cap).
+  // While the keyboard is up it already covers the home-indicator inset, so drop it.
+  const raised = keyboardHeight > 0;
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={styles.root}>
         <Pressable style={styles.backdrop} onPress={onClose} />
-        <ThemedView style={[styles.sheet, { paddingBottom: insets.bottom + Spacing.four }]}>
+        <ThemedView
+          style={[
+            styles.sheet,
+            { marginBottom: keyboardHeight, paddingBottom: raised ? Spacing.four : insets.bottom + Spacing.four },
+          ]}>
           <View style={styles.header}>
             <ThemedText style={styles.title}>{title}</ThemedText>
             <ThemedText type="link" themeColor="textSecondary" onPress={onClose}>
@@ -38,7 +71,7 @@ export function FormSheet({
           </View>
           {children}
         </ThemedView>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
