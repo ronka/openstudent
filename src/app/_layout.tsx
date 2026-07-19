@@ -1,7 +1,8 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { PostHogProvider } from 'posthog-react-native';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -44,11 +45,27 @@ export default function RootLayout() {
     initializeRTL();
   }, []);
 
+  // The catalog is effectively static within a session (regenerated ~once per
+  // semester), so keep it fresh for a long time and avoid refetching on remount.
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 1000 * 60 * 60,
+            gcTime: 1000 * 60 * 60 * 24,
+          },
+        },
+      }),
+  );
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <PostHogProvider client={posthog} autocapture={{ captureScreens: false, captureTouches: false }}>
-        <AppNavigation />
-      </PostHogProvider>
+      <QueryClientProvider client={queryClient}>
+        <PostHogProvider client={posthog} autocapture={{ captureScreens: false, captureTouches: false }}>
+          <AppNavigation />
+        </PostHogProvider>
+      </QueryClientProvider>
     </GestureHandlerRootView>
   );
 }

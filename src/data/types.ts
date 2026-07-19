@@ -3,7 +3,9 @@
  * See PLAN.md §2 for the source field mapping.
  */
 
-export type Faculty = 'מתמטיקה' | 'מדעי המחשב';
+/** Widened from a 2-value union to the raw scraped subject/department name so the
+ * full catalog (all Open University departments, not just CS/Math) can be represented. */
+export type Faculty = string;
 export type CourseType = 'חובה' | 'בחירה' | 'סמינר';
 export type CourseLevel = 'ר' | 'מ';
 export type CourseStatus = 'planned' | 'studying' | 'passed';

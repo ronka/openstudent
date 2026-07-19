@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { useResponsiveListHeight } from '@/components/async-list-area';
 import { ChipField } from '@/components/form-fields';
 import { FormSheet, SheetButton } from '@/components/form-sheet';
 import { CourseCatalogList } from '@/components/course-catalog-list';
 import { Spacing } from '@/constants/theme';
-import { catalogEntryByNumber, type CourseCatalogEntry } from '@/data/catalog';
+import type { CourseCatalogEntry } from '@/data/catalog';
 import { SEMESTERS } from '@/data/constants';
 import { deriveCourseStatus, getCurrentSemester, getYearOptions } from '@/data/semester';
 import { coursesCollection } from '@/data/store';
@@ -26,14 +27,18 @@ export function CourseCatalogPicker({
   source?: 'courses_list' | 'plan';
 }) {
   const current = useMemo(() => getCurrentSemester(), []);
+  const listHeight = useResponsiveListHeight();
 
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  // Capture-at-selection: the tapped search-result row *is* the entry, so it's stored
+  // directly instead of re-resolving by number later.
+  const [selected, setSelected] = useState<Map<string, CourseCatalogEntry>>(new Map());
+  const selectedCourseNumbers = useMemo(() => new Set(selected.keys()), [selected]);
   const [year, setYear] = useState(current.year);
   const [semester, setSemester] = useState<Semester>(current.term);
 
   useEffect(() => {
     if (!visible) return;
-    setSelected(new Set());
+    setSelected(new Map());
     setYear(current.year);
     setSemester(current.term);
     // Only re-run when the sheet is (re)opened.
@@ -42,9 +47,9 @@ export function CourseCatalogPicker({
 
   function toggle(entry: CourseCatalogEntry) {
     setSelected((prev) => {
-      const next = new Set(prev);
+      const next = new Map(prev);
       if (next.has(entry.courseNumber)) next.delete(entry.courseNumber);
-      else next.add(entry.courseNumber);
+      else next.set(entry.courseNumber, entry);
       return next;
     });
   }
@@ -52,13 +57,12 @@ export function CourseCatalogPicker({
   function handleAdd() {
     if (selected.size === 0) return;
     const now = Date.now();
-    const created = Array.from(selected).map((courseNumber, index) => {
-      const entry = catalogEntryByNumber(courseNumber)!;
+    const created = Array.from(selected.values()).map((entry, index) => {
       const course: Course = {
         id: `c-${now}-${index}`,
         name: entry.name,
         courseNumber: entry.courseNumber,
-        faculty: entry.faculty,
+        faculty: entry.faculty[0],
         credits: entry.credits,
         type: entry.type,
         level: entry.level,
@@ -76,7 +80,7 @@ export function CourseCatalogPicker({
   return (
     <FormSheet visible={visible} onClose={onClose} title="הוספת קורסים">
       <View style={styles.body}>
-        <CourseCatalogList selected={selected} onToggle={toggle} listStyle={styles.list} />
+        <CourseCatalogList selected={selectedCourseNumbers} onToggle={toggle} listStyle={{ height: listHeight }} />
 
         <ChipField
           label="סמסטר"
@@ -109,8 +113,5 @@ const YEAR_OPTIONS = getYearOptions();
 const styles = StyleSheet.create({
   body: {
     gap: Spacing.three,
-  },
-  list: {
-    maxHeight: 320,
   },
 });

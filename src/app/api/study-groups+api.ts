@@ -1,5 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 
+import { findCatalogEntry } from '@/data/catalog-server';
 import { db } from '@/db/client';
 import { studyGroupLinks } from '@/db/schema';
 import { detectPlatform } from '@/data/study-groups';
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
     .insert(studyGroupLinks)
     .values({
       courseNumber,
+      courseName: findCatalogEntry(courseNumber)?.name,
       year,
       semester,
       url: url.trim(),

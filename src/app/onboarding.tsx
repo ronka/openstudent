@@ -11,7 +11,7 @@ import { TaskCheckbox } from '@/components/task-checkbox';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing } from '@/constants/theme';
-import { catalogEntryByNumber, type CourseCatalogEntry } from '@/data/catalog';
+import { COURSE_CATALOG, type CourseCatalogEntry } from '@/data/catalog';
 import { SEMESTERS } from '@/data/constants';
 import { markOnboardingComplete } from '@/data/onboarding';
 import { setName } from '@/data/profile';
@@ -66,7 +66,11 @@ export default function OnboardingScreen() {
   const [name, setNameInput] = useState('');
   const [struggles, setStruggles] = useState<Set<StruggleKey>>(new Set());
 
-  const [selectedCourses, setSelectedCourses] = useState<Set<string>>(new Set());
+  // Capture-at-selection: the tapped search-result row *is* the entry, keyed by
+  // courseNumber so re-tapping toggles it off. Storing the entry (not just the number)
+  // means finishing the step never needs to re-resolve against the catalog.
+  const [selectedCourses, setSelectedCourses] = useState<Map<string, CourseCatalogEntry>>(new Map());
+  const selectedCourseNumbers = useMemo(() => new Set(selectedCourses.keys()), [selectedCourses]);
   const [year, setYear] = useState(current.year);
   const [semester, setSemester] = useState<Semester>(current.term);
   const [editingSemester, setEditingSemester] = useState(false);
@@ -130,22 +134,21 @@ export default function OnboardingScreen() {
 
   function toggleCourse(entry: CourseCatalogEntry) {
     setSelectedCourses((prev) => {
-      const next = new Set(prev);
+      const next = new Map(prev);
       if (next.has(entry.courseNumber)) next.delete(entry.courseNumber);
-      else next.add(entry.courseNumber);
+      else next.set(entry.courseNumber, entry);
       return next;
     });
   }
 
   function finishWithCourses() {
     const now = Date.now();
-    const created = Array.from(selectedCourses).map((courseNumber, index) => {
-      const entry = catalogEntryByNumber(courseNumber)!;
+    const created = Array.from(selectedCourses.values()).map((entry, index) => {
       const course: Course = {
         id: `c-${now}-${index}`,
         name: entry.name,
         courseNumber: entry.courseNumber,
-        faculty: entry.faculty,
+        faculty: entry.faculty[0],
         credits: entry.credits,
         type: entry.type,
         level: entry.level,
@@ -357,10 +360,11 @@ export default function OnboardingScreen() {
             )}
 
             <CourseCatalogList
-              selected={selectedCourses}
+              selected={selectedCourseNumbers}
               onToggle={toggleCourse}
               style={styles.step4CatalogWrapper}
               listStyle={styles.step4List}
+              fallbackEntries={COURSE_CATALOG}
             />
           </View>
 

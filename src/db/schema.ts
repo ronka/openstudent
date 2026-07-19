@@ -3,6 +3,10 @@ import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 export const studyGroupLinks = pgTable('study_group_links', {
   id: uuid('id').primaryKey().defaultRandom(),
   courseNumber: text('course_number').notNull(),
+  /** Denormalized at write time so the study-groups list never depends on live catalog
+   * availability. Nullable: legacy rows predate this column and fall back to
+   * `courseNumber` at render time until backfilled. */
+  courseName: text('course_name'),
   year: integer('year').notNull(),
   semester: text('semester').notNull(),
   platform: text('platform').notNull(),

@@ -12,7 +12,6 @@ import { SubmitGroupLinkForm } from '@/components/submit-group-link-form';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { catalogEntryByNumber } from '@/data/catalog';
 import { SEMESTERS } from '@/data/constants';
 import { getYearOptions } from '@/data/semester';
 import { PLATFORM_EMOJI, PLATFORM_LABELS, type StudyGroupLink } from '@/data/study-groups';
@@ -180,7 +179,7 @@ export default function StudyGroupsScreen() {
           keyExtractor={(link) => link.id}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           renderItem={({ item }) => {
-            const courseName = catalogEntryByNumber(item.courseNumber)?.name ?? item.courseNumber;
+            const courseName = item.courseName ?? item.courseNumber;
             const subtitle = [item.courseNumber, `שנה ${item.year}`, `סמסטר ${item.semester}`].join(' · ');
             return (
               <Pressable onPress={() => openLink(item)} style={({ pressed }) => pressed && styles.pressed}>

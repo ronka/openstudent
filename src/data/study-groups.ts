@@ -10,8 +10,11 @@ export type StudyGroupLinkStatus = 'approved' | 'pending';
 
 export interface StudyGroupLink {
   id: string;
-  /** Ties to COURSE_CATALOG via `catalogEntryByNumber`. */
   courseNumber: string;
+  /** Denormalized at write time from the catalog (see `/api/study-groups` `POST`) so
+   * display never depends on live catalog availability. Nullable: legacy rows predate
+   * this column — display falls back to `courseNumber` when absent. */
+  courseName: string | null;
   year: number;
   semester: Semester;
   platform: GroupPlatform;

@@ -1,0 +1,1 @@
+ALTER TABLE "study_group_links" ADD COLUMN "course_name" text;

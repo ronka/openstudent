@@ -1,9 +1,33 @@
 #!/usr/bin/env node
 /**
- * Scrapes the Open University Computer Science department (307) course catalog and
- * regenerates the COURSE_CATALOG array in src/data/catalog.ts.
+ * Scrapes the full Open University course catalog and writes
+ * src/app/api/catalog.generated.json — a server-only JSON asset imported by the
+ * catalog API route (never shipped to the client bundle).
+ *
+ * Iterates every `validation.ok` sitecode/sitetype/departmentcode combination in
+ * openu-codes.json (one HTTP endpoint per department/subject site), fetching all
+ * pages per combo. The same course frequently appears under multiple combos
+ * (cross-listed across departments); rows are deduped by courseNumber with an
+ * explicit merge policy — see mergeEntry().
+ *
+ * Faculty/subject data (`faculty`) is an ARRAY: a course can legitimately belong
+ * to more than one department, so nothing is dropped in favor of a single
+ * "primary" value.
+ *
+ * NOTE ON `type`: "חובה" (required) is degree-specific, not an intrinsic property
+ * of a course (required for one degree, elective for another) — the endpoint does
+ * not carry it, so it can never be scraped. This script only distinguishes
+ * 'סמינר' (via the isSeminar heuristic) from the default 'בחירה'. Whatever marks
+ * a course as חובה for a given degree must live in a separate per-degree
+ * requirements map, not here.
  *
  * The endpoint is paginated; we increment `page` until it returns an empty array.
+ * Combos are fetched sequentially (be a good citizen to the OpenU endpoint).
+ *
+ * KNOWN GAP: department-page discovery (the combos in openu-codes.json) is not
+ * fully exhaustive — at least 2 core mandatory courses (20109 אלגברה לינארית 1,
+ * 20417 אלגוריתמים) are not reachable through any of the 31 combos. Accepted and
+ * documented rather than fixed; see CATALOG_PLAN.md "Known limitation" section.
  *
  * Run with: npm run scrape:catalog
  */
@@ -13,38 +37,57 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const CATALOG_PATH = resolve(__dirname, '../src/data/catalog.ts');
+const CODES_PATH = resolve(__dirname, '../openu-codes.json');
+const OUTPUT_PATH = resolve(__dirname, '../src/app/api/catalog.generated.json');
 
 const API =
   'https://academic.openu.ac.il/_layouts/15/OpenU_WWW/Handlers/GetCoursesBySiteCodeHandler.ashx';
+
+/** Fixed for every combo; sitecode/sitetype/departmentcode vary per combo. */
 const PARAMS = {
-  sitecode: '307',
-  sitetype: '1',
   subject: '',
   level: '',
   semesterfrom: '-1',
   semesterto: '-1',
   marchivdaat: '',
   freeText: '',
-  departmentcode: '307',
 };
 
-function buildUrl(page) {
+async function loadCombos() {
+  const raw = await readFile(CODES_PATH, 'utf8');
+  const codes = JSON.parse(raw);
+  const combos = codes.candidates
+    .filter((candidate) => candidate.validation?.ok)
+    .map(({ sitecode, sitetype, departmentcode }) => ({ sitecode, sitetype, departmentcode }));
+
+  // Sort deterministically so re-runs merge in the same order regardless of how
+  // openu-codes.json happens to list candidates (keeps output diffs stable).
+  combos.sort(
+    (a, b) =>
+      a.sitecode.localeCompare(b.sitecode) ||
+      a.sitetype.localeCompare(b.sitetype) ||
+      a.departmentcode.localeCompare(b.departmentcode),
+  );
+  return combos;
+}
+
+function buildUrl(combo, page) {
   const url = new URL(API);
   url.searchParams.set('page', String(page));
-  for (const [key, value] of Object.entries(PARAMS)) url.searchParams.set(key, value);
+  const params = { ...PARAMS, ...combo };
+  for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
   return url.toString();
 }
 
-async function fetchAllCourses() {
+async function fetchAllCourses(combo) {
   const rows = [];
   for (let page = 1; ; page++) {
-    const res = await fetch(buildUrl(page));
+    const res = await fetch(buildUrl(combo, page));
     if (!res.ok) throw new Error(`Page ${page} request failed: ${res.status} ${res.statusText}`);
     const batch = await res.json();
     if (!Array.isArray(batch) || batch.length === 0) break;
     rows.push(...batch);
-    process.stdout.write(`\rFetched page ${page} — ${rows.length} courses so far`);
+    process.stdout.write(`\r  page ${page} — ${rows.length} rows so far`);
   }
   process.stdout.write('\n');
   return rows;
@@ -58,20 +101,18 @@ function normalizeCourseNumber(courseIDField) {
   return stripped || '0';
 }
 
-/** Remove RTL/LTR control marks and surrounding whitespace from a course name. */
-function cleanName(courseNameField) {
-  return String(courseNameField ?? '')
+/** Remove RTL/LTR control marks and surrounding whitespace from scraped text. */
+function cleanName(value) {
+  return String(value ?? '')
     .replace(/[‎‏‪-‮]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
 
-/** Faculty is constrained to the two the app models; prefer CS, then Math. */
+/** All subjects/departments this course is listed under (deduped, insertion order). */
 function mapFaculty(row) {
-  const subjects = (row.subjectsField ?? []).map((s) => s.teurField);
-  if (subjects.includes('מדעי המחשב')) return 'מדעי המחשב';
-  if (subjects.includes('מתמטיקה')) return 'מתמטיקה';
-  return undefined;
+  const subjects = (row.subjectsField ?? []).map((s) => cleanName(s.teurField)).filter(Boolean);
+  return Array.from(new Set(subjects));
 }
 
 function mapLevel(levelField) {
@@ -99,44 +140,49 @@ function toEntry(row) {
   };
 }
 
-// --- Serialization ---------------------------------------------------------
-
-function quote(value) {
-  return `'${String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
-}
-
-function serializeEntry(entry) {
-  const parts = [`courseNumber: ${quote(entry.courseNumber)}`, `name: ${quote(entry.name)}`];
-  if (entry.faculty) parts.push(`faculty: ${quote(entry.faculty)}`);
-  if (entry.credits != null) parts.push(`credits: ${entry.credits}`);
-  parts.push(`type: ${quote(entry.type)}`);
-  if (entry.level) parts.push(`level: ${quote(entry.level)}`);
-  return `  { ${parts.join(', ')} },`;
+/**
+ * Merge policy on courseNumber collision (a course appearing under multiple
+ * combos): prefer non-empty name/credits/level; union faculty arrays in
+ * first-encountered order (the earliest-processed combo's subject becomes the
+ * array's first/"primary" entry — consumers that need a single faculty use
+ * `faculty[0]`); a course is a seminar if *any* occurrence says so.
+ */
+function mergeEntry(existing, incoming) {
+  const faculty = [...existing.faculty];
+  for (const f of incoming.faculty) if (!faculty.includes(f)) faculty.push(f);
+  return {
+    courseNumber: existing.courseNumber,
+    name: existing.name || incoming.name,
+    faculty,
+    credits: existing.credits ?? incoming.credits,
+    type: existing.type === 'סמינר' || incoming.type === 'סמינר' ? 'סמינר' : 'בחירה',
+    level: existing.level ?? incoming.level,
+  };
 }
 
 async function main() {
-  const rows = await fetchAllCourses();
+  const combos = await loadCombos();
+  console.log(`Scraping ${combos.length} sitecode/sitetype/departmentcode combos...`);
 
-  const seen = new Set();
-  const entries = [];
-  for (const row of rows) {
-    const entry = toEntry(row);
-    if (seen.has(entry.courseNumber)) continue;
-    seen.add(entry.courseNumber);
-    entries.push(entry);
+  const merged = new Map();
+  for (const [index, combo] of combos.entries()) {
+    console.log(
+      `[${index + 1}/${combos.length}] sitecode=${combo.sitecode} sitetype=${combo.sitetype} departmentcode=${combo.departmentcode}`,
+    );
+    const rows = await fetchAllCourses(combo);
+    for (const row of rows) {
+      const entry = toEntry(row);
+      const existing = merged.get(entry.courseNumber);
+      merged.set(entry.courseNumber, existing ? mergeEntry(existing, entry) : entry);
+    }
   }
 
-  const body = entries.map(serializeEntry).join('\n');
-  const replacement = `export const COURSE_CATALOG: CourseCatalogEntry[] = [\n${body}\n];`;
+  const entries = Array.from(merged.values()).sort(
+    (a, b) => Number(a.courseNumber) - Number(b.courseNumber) || a.courseNumber.localeCompare(b.courseNumber),
+  );
 
-  const source = await readFile(CATALOG_PATH, 'utf8');
-  const arrayRegex = /export const COURSE_CATALOG: CourseCatalogEntry\[\] = \[[\s\S]*?\n\];/;
-  if (!arrayRegex.test(source)) {
-    throw new Error('Could not locate the COURSE_CATALOG array in src/data/catalog.ts');
-  }
-
-  await writeFile(CATALOG_PATH, source.replace(arrayRegex, replacement));
-  console.log(`Wrote ${entries.length} courses to ${CATALOG_PATH}`);
+  await writeFile(OUTPUT_PATH, `${JSON.stringify(entries, null, 2)}\n`);
+  console.log(`\nWrote ${entries.length} deduped courses (from ${combos.length} combos) to ${OUTPUT_PATH}`);
 }
 
 main().catch((err) => {

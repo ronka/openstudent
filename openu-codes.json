@@ -1,0 +1,462 @@
+{
+  "generatedAt": "2026-07-18T19:05:04.043Z",
+  "api": "https://academic.openu.ac.il/_layouts/15/OpenU_WWW/Handlers/GetCoursesBySiteCodeHandler.ashx",
+  "validCount": 31,
+  "candidates": [
+    {
+      "sitecode": "306",
+      "sitetype": "1",
+      "departmentcode": "306",
+      "source": "inferred-department",
+      "pageUrl": null,
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 15530,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "4120",
+      "sitetype": "2",
+      "departmentcode": "306",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/natural_sciences/chemistry/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 14031,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "4130",
+      "sitetype": "2",
+      "departmentcode": "306",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/natural_sciences/physics/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 14172,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "4320",
+      "sitetype": "2",
+      "departmentcode": "306",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/natural_sciences/life/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 12901,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "307",
+      "sitetype": "1",
+      "departmentcode": "307",
+      "source": "inferred-department",
+      "pageUrl": null,
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 14781,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "1310",
+      "sitetype": "2",
+      "departmentcode": "307",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/cs/industrial_engineering/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 12033,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "1330",
+      "sitetype": "2",
+      "departmentcode": "307",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/cs/software_engineering/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 9847,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "4520",
+      "sitetype": "2",
+      "departmentcode": "307",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/cs/mathematics/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 17041,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "4720",
+      "sitetype": "2",
+      "departmentcode": "307",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/cs/computer/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 14776,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "01",
+      "sitetype": "3",
+      "departmentcode": "307",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/cs/msc/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 13956,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "308",
+      "sitetype": "1",
+      "departmentcode": "308",
+      "source": "inferred-department",
+      "pageUrl": null,
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 16237,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "1530",
+      "sitetype": "2",
+      "departmentcode": "308",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/sociology/sociology/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 17104,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "1535",
+      "sitetype": "2",
+      "departmentcode": "308",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/sociology/communication/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 15405,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "1570",
+      "sitetype": "2",
+      "departmentcode": "308",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/sociology/political_science/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 17840,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "311",
+      "sitetype": "1",
+      "departmentcode": "311",
+      "source": "inferred-department",
+      "pageUrl": null,
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 14553,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "1540",
+      "sitetype": "2",
+      "departmentcode": "311",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/education_psychology/psychology/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 15296,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "1550",
+      "sitetype": "2",
+      "departmentcode": "311",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/education_psychology/education/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 15845,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "05",
+      "sitetype": "3",
+      "departmentcode": "311",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/education_psychology/ma/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 16853,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "331",
+      "sitetype": "1",
+      "departmentcode": "331",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/arts/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 12743,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "1150",
+      "sitetype": "2",
+      "departmentcode": "331",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/arts/literature/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 14693,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "1157",
+      "sitetype": "2",
+      "departmentcode": "331",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/arts/theater/pages/courses.aspx",
+      "validation": {
+        "ok": false,
+        "status": 200,
+        "responseBytes": 2,
+        "hasCourseNumber": false
+      }
+    },
+    {
+      "sitecode": "1158",
+      "sitetype": "2",
+      "departmentcode": "331",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/arts/cinema/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 13571,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "1160",
+      "sitetype": "2",
+      "departmentcode": "331",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/arts/languageandlinguistics/pages/courses.aspx",
+      "validation": {
+        "ok": false,
+        "status": 200,
+        "responseBytes": 2,
+        "hasCourseNumber": false
+      }
+    },
+    {
+      "sitecode": "1170",
+      "sitetype": "2",
+      "departmentcode": "331",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/arts/music/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 10045,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "1180",
+      "sitetype": "2",
+      "departmentcode": "331",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/arts/arts/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 13080,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "332",
+      "sitetype": "1",
+      "departmentcode": "332",
+      "source": "inferred-department",
+      "pageUrl": null,
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 12584,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "1120",
+      "sitetype": "2",
+      "departmentcode": "332",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/history/judaism/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 15123,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "1190",
+      "sitetype": "2",
+      "departmentcode": "332",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/history/philosophy/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 15132,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "1200",
+      "sitetype": "2",
+      "departmentcode": "332",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/history/history/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 14555,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "341",
+      "sitetype": "1",
+      "departmentcode": "341",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/economics/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 17039,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "1520",
+      "sitetype": "2",
+      "departmentcode": "341",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/economics/economy/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 15192,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "1560",
+      "sitetype": "2",
+      "departmentcode": "341",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/economics/management/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 16919,
+        "hasCourseNumber": true
+      }
+    },
+    {
+      "sitecode": "1564",
+      "sitetype": "2",
+      "departmentcode": "341",
+      "source": "course-page",
+      "pageUrl": "https://academic.openu.ac.il/economics/accounting/pages/courses.aspx",
+      "validation": {
+        "ok": true,
+        "status": 200,
+        "responseBytes": 17727,
+        "hasCourseNumber": true
+      }
+    }
+  ],
+  "failedPages": [
+    {
+      "pageUrl": "https://academic.openu.ac.il/arts/culture/pages/courses.aspx",
+      "reason": "Could not extract all three codes"
+    },
+    {
+      "pageUrl": "https://academic.openu.ac.il/education_psychology/cognitive-psychology/Pages/courses.aspx",
+      "reason": "Could not extract all three codes"
+    },
+    {
+      "pageUrl": "https://academic.openu.ac.il/education_psychology/cognitive-psychology/pages/courses.aspx",
+      "reason": "Could not extract all three codes"
+    },
+    {
+      "pageUrl": "https://academic.openu.ac.il/education_psychology/social-psychology/pages/courses.aspx",
+      "reason": "Could not extract all three codes"
+    },
+    {
+      "pageUrl": "https://academic.openu.ac.il/english/pages/courses.aspx",
+      "reason": "Could not extract all three codes"
+    },
+    {
+      "pageUrl": "https://academic.openu.ac.il/natural_sciences/earth/pages/courses.aspx",
+      "reason": "Could not extract all three codes"
+    }
+  ]
+}
