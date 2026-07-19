@@ -11,7 +11,7 @@ import { resetAllData } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { getRTLDebugInfo, rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
-const UPDATE_VERSION = 7;
+const UPDATE_VERSION = 8;
 
 export default function SettingsScreen() {
   const screenPadding = useScreenPadding();
