@@ -81,7 +81,7 @@ function buildUrl(combo, page) {
 
 async function fetchAllCourses(combo) {
   const rows = [];
-  for (let page = 1; ; page++) {
+  for (let page = 0; ; page++) {
     const res = await fetch(buildUrl(combo, page));
     if (!res.ok) throw new Error(`Page ${page} request failed: ${res.status} ${res.statusText}`);
     const batch = await res.json();
