@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import * as Notifications from 'expo-notifications';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { PostHogProvider } from 'posthog-react-native';
@@ -7,6 +8,7 @@ import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { startNotificationSync } from '@/data/notification-scheduler';
 import { useHasCompletedOnboarding } from '@/data/onboarding';
 import { useScreenViewTracking } from '@/hooks/use-screen-view';
 import { posthog } from '@/utils/analytics';
@@ -16,6 +18,17 @@ import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/src/global.css';
 
 SplashScreen.preventAutoHideAsync();
+
+// Show reminders as a banner (and in the list) even when the app is foregrounded, so a
+// 09:00 reminder isn't silently swallowed while the student has the app open.
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 function AppNavigation() {
   const colorScheme = useColorScheme();
@@ -44,6 +57,10 @@ export default function RootLayout() {
   useEffect(() => {
     initializeRTL();
   }, []);
+
+  // Keep local reminders in sync with the data: reconcile once on start, then on every
+  // collection change. Idempotent, so a missed run (crash, OS purge) self-heals here.
+  useEffect(() => startNotificationSync(), []);
 
   // The catalog is effectively static within a session (regenerated ~once per
   // semester), so keep it fresh for a long time and avoid refetching on remount.

@@ -1,5 +1,5 @@
 import { Link } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { DashboardCard } from '@/components/dashboard-card';
@@ -11,7 +11,8 @@ import { TaskCheckbox } from '@/components/task-checkbox';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Text } from '@/components/ui/text';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { enableNotifications, markPromptSeen, usePromptSeen } from '@/data/notification-settings';
 import { useName } from '@/data/profile';
 import { randomQuote } from '@/data/quotes';
 import { getCurrentSemester, isCurrentSemester } from '@/data/semester';
@@ -36,6 +37,20 @@ export default function DashboardScreen() {
   const exams = useExams();
   const name = useName();
   const screenPadding = useScreenPadding();
+  // The dashboard is behind the onboarding guard, so "onboarding complete" is implicit;
+  // show the one-time nudge only to users who never saw the notifications prompt.
+  const promptSeen = usePromptSeen();
+
+  const handleEnableFromPrompt = useCallback(async () => {
+    await enableNotifications();
+    markPromptSeen();
+    posthog.capture('dashboard_notifications_prompt_enabled');
+  }, []);
+
+  const handleDismissPrompt = useCallback(() => {
+    markPromptSeen();
+    posthog.capture('dashboard_notifications_prompt_dismissed');
+  }, []);
 
   const courseNameById = useMemo(() => new Map(courses.map((course) => [course.id, course.name])), [courses]);
 
@@ -90,6 +105,30 @@ export default function DashboardScreen() {
             {quote}
           </ThemedText>
         </View>
+
+        {!promptSeen && (
+          <DashboardCard>
+            <ThemedText type="smallBold" style={styles.promptTitle}>
+              🔔 רוצים תזכורת שבוע ויום לפני כל הגשה ובחינה?
+            </ThemedText>
+            <View style={styles.promptActions}>
+              <Pressable
+                onPress={handleEnableFromPrompt}
+                style={({ pressed }) => pressed && styles.pressed}>
+                <ThemedView type="text" style={styles.promptButton}>
+                  <ThemedText type="smallBold" themeColor="background">
+                    הפעילו תזכורות
+                  </ThemedText>
+                </ThemedView>
+              </Pressable>
+              <Pressable onPress={handleDismissPrompt} hitSlop={8}>
+                <ThemedText type="link" themeColor="textSecondary">
+                  לא עכשיו
+                </ThemedText>
+              </Pressable>
+            </View>
+          </DashboardCard>
+        )}
 
         <View style={styles.heroColumn}>
           <View style={styles.heroCell}>
@@ -291,5 +330,22 @@ const styles = StyleSheet.create({
   },
   cardCaption: {
     textAlign: rtlTextAlign.start,
+  },
+  promptTitle: {
+    textAlign: rtlTextAlign.start,
+  },
+  promptActions: {
+    flexDirection: rtlFlexDirection.row,
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
+  promptButton: {
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.four,
+    alignItems: 'center',
+  },
+  pressed: {
+    opacity: 0.7,
   },
 });

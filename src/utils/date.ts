@@ -3,7 +3,7 @@
  * to avoid DST/timezone off-by-one, matching `date-field.tsx`.
  */
 
-function parseLocalDate(value: string): Date | null {
+export function parseLocalDate(value: string): Date | null {
   const [y, m, d] = value.split('-').map(Number);
   if (y && m && d) return new Date(y, m - 1, d, 12);
   return null;

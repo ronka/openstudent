@@ -1,11 +1,14 @@
 import Constants from 'expo-constants';
+import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing } from '@/constants/theme';
+import { disableNotifications, rescheduleAll } from '@/data/notification-scheduler';
+import { enableNotifications, useNotificationsEnabled } from '@/data/notification-settings';
 import { resetOnboarding } from '@/data/onboarding';
 import { resetAllData } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
@@ -16,6 +19,7 @@ const UPDATE_VERSION = 8;
 export default function SettingsScreen() {
   const screenPadding = useScreenPadding();
   const router = useRouter();
+  const notificationsEnabled = useNotificationsEnabled();
   const appVersion = `${Constants.expoConfig?.version ?? '1.0.0'}-${UPDATE_VERSION}`;
 
   const tapCountRef = useRef(0);
@@ -25,6 +29,25 @@ export default function SettingsScreen() {
     return () => {
       if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
     };
+  }, []);
+
+  const handleToggleNotifications = useCallback(async (value: boolean) => {
+    if (value) {
+      const status = await enableNotifications();
+      // A permanent denial resolves without a system dialog — steer the user to OS settings.
+      if (status !== 'granted') {
+        Alert.alert(
+          'התראות חסומות',
+          'כדי לקבל תזכורות יש לאפשר התראות עבור Open Student בהגדרות המכשיר.',
+          [
+            { text: 'ביטול', style: 'cancel' },
+            { text: 'פתח הגדרות', onPress: () => Linking.openSettings() },
+          ]
+        );
+      }
+    } else {
+      await disableNotifications();
+    }
   }, []);
 
   const showDebugOptions = useCallback(() => {
@@ -38,6 +61,23 @@ export default function SettingsScreen() {
             resetAllData();
             resetOnboarding();
             router.replace('/onboarding');
+          },
+        },
+        {
+          text: 'התראות מתוזמנות',
+          onPress: async () => {
+            const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+            const preview = scheduled
+              .slice(0, 5)
+              .map((entry) => `${entry.content.title} — ${JSON.stringify(entry.trigger)}`)
+              .join('\n\n');
+            Alert.alert(`${scheduled.length} התראות מתוזמנות`, preview || 'אין התראות מתוזמנות');
+          },
+        },
+        {
+          text: 'תזמן התראות מחדש',
+          onPress: () => {
+            void rescheduleAll();
           },
         },
         {
@@ -80,6 +120,18 @@ export default function SettingsScreen() {
             כל הלימודים שלך במקום אחד
           </ThemedText>
         </View>
+
+        <ThemedView type="card" className="border-border" style={styles.row}>
+          <View style={styles.rowText}>
+            <ThemedText type="smallBold" style={styles.rowTitle}>
+              התראות
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary" style={styles.rowTitle}>
+              תזכורת שבוע לפני ויום לפני כל הגשה ובחינה
+            </ThemedText>
+          </View>
+          <Switch value={notificationsEnabled} onValueChange={handleToggleNotifications} />
+        </ThemedView>
 
         <Pressable onPress={handleAppDetailsPress}>
           {({ pressed }) => (

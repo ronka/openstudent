@@ -13,6 +13,8 @@ import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing } from '@/constants/theme';
 import { COURSE_CATALOG, type CourseCatalogEntry } from '@/data/catalog';
 import { SEMESTERS } from '@/data/constants';
+import { reconcileNotifications } from '@/data/notification-scheduler';
+import { enableNotifications, markPromptSeen } from '@/data/notification-settings';
 import { markOnboardingComplete } from '@/data/onboarding';
 import { setName } from '@/data/profile';
 import { deriveCourseStatus, getCurrentSemester, getYearOptions } from '@/data/semester';
@@ -54,9 +56,9 @@ function copyForStruggles(struggles: Set<StruggleKey>, single: Record<StruggleKe
   return single.progress;
 }
 
-/** Total onboarding screens in the finished flow (§4) — dots render for all six even
- * before later steps exist, so Tasks 4–6 only need to add step branches, not this UI. */
-const TOTAL_STEPS = 7;
+/** Total onboarding screens in the finished flow (§4). Step 7 is the notifications
+ * opt-in, step 8 the summary. */
+const TOTAL_STEPS = 8;
 
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
@@ -95,7 +97,24 @@ export default function OnboardingScreen() {
   }, []);
 
   function finish() {
+    // Step 7 is now the notifications opt-in; the summary moved to step 8.
     setStep(7);
+  }
+
+  async function handleEnableNotifications() {
+    // Advance regardless of the OS permission outcome — a denial isn't a dead end, the
+    // settings toggle is the recovery path. Marking the prompt seen means existing-user
+    // dashboard nudge never double-asks someone who went through onboarding.
+    await enableNotifications();
+    markPromptSeen();
+    posthog.capture('onboarding_notifications_enabled');
+    setStep(8);
+  }
+
+  function skipNotifications() {
+    markPromptSeen();
+    posthog.capture('onboarding_notifications_skipped');
+    setStep(8);
   }
 
   function handleNameSubmit() {
@@ -124,6 +143,9 @@ export default function OnboardingScreen() {
     examsCollection.addMany(createdExams);
     setName(name);
     markOnboardingComplete();
+    // The debounced collection subscriber would catch this flush too; reconcile now so
+    // reminders for the just-created items are scheduled immediately.
+    void reconcileNotifications();
     posthog.capture('onboarding_completed', {
       struggles: Array.from(struggles),
       course_count: createdCourses.length,
@@ -217,7 +239,8 @@ export default function OnboardingScreen() {
     switch (step) {
       case 6:
       case 7:
-        // The course loop (and the summary after it) is treated as one unit: Back returns
+      case 8:
+        // The course loop (and the notifications + summary steps after it) is treated as one unit: Back returns
         // to course selection and drops the plan built on the way in, so re-picking — or
         // skipping — never carries stale rows into the final flush. Per-course task editing
         // happens later in-app (plan R1). `selectedCourses` is preserved, so the user lands
@@ -446,6 +469,34 @@ export default function OnboardingScreen() {
       )}
 
       {step === 7 && (
+        <View style={styles.step}>
+          <View style={styles.stepBody}>
+            <ThemedText type="subtitle" style={styles.headline}>
+              🔔 שלא תפספסו הגשה
+            </ThemedText>
+            <ThemedText themeColor="textSecondary" style={styles.body}>
+              נשלח לכם תזכורת שבוע לפני ויום לפני כל מטלה ובחינה — בשעה 09:00, בול בזמן להתארגן.
+            </ThemedText>
+          </View>
+
+          <View style={styles.step4Footer}>
+            <Pressable onPress={handleEnableNotifications} style={({ pressed }) => pressed && styles.pressed}>
+              <ThemedView type="text" style={styles.primaryButton}>
+                <ThemedText type="smallBold" themeColor="background" style={styles.primaryButtonText}>
+                  הפעילו תזכורות
+                </ThemedText>
+              </ThemedView>
+            </Pressable>
+            <Pressable onPress={skipNotifications}>
+              <ThemedText type="link" themeColor="textSecondary" style={styles.skipLinkText}>
+                אולי אחר כך
+              </ThemedText>
+            </Pressable>
+          </View>
+        </View>
+      )}
+
+      {step === 8 && (
         <View style={styles.step}>
           <ScrollView contentContainerStyle={styles.stepBody}>
             {createdCourses.length === 0 ? (
