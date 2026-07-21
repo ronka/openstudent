@@ -13,7 +13,7 @@ import { Section } from '@/components/section';
 import { TaskCheckbox } from '@/components/task-checkbox';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { COURSE_STATUS_LABELS, COURSE_STATUS_TONES } from '@/data/constants';
 import { deriveCourseStatus, getCurrentSemester } from '@/data/semester';
 import {
@@ -47,6 +47,15 @@ export default function CourseDetailScreen() {
   }
 
   const status = deriveCourseStatus(course, current);
+  const meta = [
+    course.courseNumber,
+    course.faculty,
+    course.credits !== undefined ? `${course.credits} נ״ז` : undefined,
+    course.type,
+    course.level ? `רמה ${course.level}` : undefined,
+    course.semester ? `סמסטר ${course.semester}׳` : undefined,
+    course.year !== undefined ? String(course.year) : undefined,
+  ].filter((item): item is string => Boolean(item));
   // What auto-derivation would pick if the manual override were cleared — shown on the
   // "אוטומטי" row so the user can see where reverting lands.
   const autoStatus = deriveCourseStatus({ ...course, statusOverride: undefined }, current);
@@ -82,7 +91,7 @@ export default function CourseDetailScreen() {
       <Stack.Screen options={{ title: course.name }} />
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: screenPadding.paddingBottom }]}>
-        <View style={styles.header}>
+        <ThemedView type="backgroundElement" style={styles.header}>
           <View style={styles.headerTop}>
             <ThemedText type="subtitle" style={styles.name}>
               {course.name}
@@ -92,21 +101,23 @@ export default function CourseDetailScreen() {
             </Pressable>
           </View>
 
+          {/* Wrapping run of facts, so short values don't each claim a full row and the
+              header stays compact whatever the catalog provides. Separated by spacing
+              rather than dots — a dot separator dangles at the start of a wrapped line. */}
           <View style={styles.metaRow}>
-            {course.courseNumber && <ThemedText themeColor="textSecondary">{course.courseNumber}</ThemedText>}
-            {course.faculty && <ThemedText themeColor="textSecondary">{course.faculty}</ThemedText>}
-            {course.credits !== undefined && (
-              <ThemedText themeColor="textSecondary">{course.credits} נ&quot;ז</ThemedText>
-            )}
+            {meta.map((item) => (
+              <ThemedText key={item} type="small" themeColor="textSecondary">
+                {item}
+              </ThemedText>
+            ))}
           </View>
 
-          <View style={styles.metaRow}>
-            <ThemedText themeColor="textSecondary">{course.type}</ThemedText>
-            {course.level && <ThemedText themeColor="textSecondary">רמה {course.level}</ThemedText>}
-            {course.grade !== undefined && (
-              <ThemedText themeColor="textSecondary">ציון {course.grade}</ThemedText>
-            )}
-          </View>
+          {(course.grade !== undefined || course.binaryPass) && (
+            <View style={styles.badgeRow}>
+              {course.grade !== undefined && <Badge label={`ציון ${course.grade}`} tone="neutral" />}
+              {course.binaryPass && <Badge label="עובר בינארי · לא בממוצע" tone="info" />}
+            </View>
+          )}
 
           {course.notes && (
             <ThemedText type="small" themeColor="textSecondary" style={styles.notes}>
@@ -115,14 +126,9 @@ export default function CourseDetailScreen() {
           )}
 
           <View style={styles.actions}>
-            <View style={styles.actionButton}>
-              <SheetButton label="עריכה" onPress={() => setShowCourseForm(true)} />
-            </View>
-            <View style={styles.actionButton}>
-              <SheetButton label="מחיקה" variant="destructive" onPress={handleDelete} />
-            </View>
+            <SheetButton label="עריכה" size="sm" onPress={() => setShowCourseForm(true)} />
           </View>
-        </View>
+        </ThemedView>
 
         <Section title="מטלות" emptyLabel="אין מטלות לקורס זה" isEmpty={assignments.length === 0}>
           {assignments.map((assignment) => {
@@ -180,6 +186,13 @@ export default function CourseDetailScreen() {
           ))}
         </Section>
 
+        {/* Destructive action lives at the very bottom, as a quiet link — it should be
+            reachable but never compete with the course's own content for attention. */}
+        <Pressable onPress={handleDelete} style={({ pressed }) => pressed && styles.pressed}>
+          <ThemedText type="link" className="text-destructive" style={styles.deleteLink}>
+            מחיקת הקורס
+          </ThemedText>
+        </Pressable>
       </ScrollView>
 
       <CourseStatusModal
@@ -220,10 +233,12 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: Spacing.two,
+    borderRadius: Radius.lg,
+    padding: Spacing.three,
   },
   headerTop: {
     flexDirection: rtlFlexDirection.row,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
@@ -233,18 +248,31 @@ const styles = StyleSheet.create({
   },
   metaRow: {
     flexDirection: rtlFlexDirection.row,
+    flexWrap: 'wrap',
+    alignItems: 'center',
     gap: Spacing.three,
+  },
+  badgeRow: {
+    flexDirection: rtlFlexDirection.row,
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+    marginTop: Spacing.half,
   },
   notes: {
     textAlign: rtlTextAlign.start,
   },
+  deleteLink: {
+    textAlign: rtlTextAlign.center,
+    marginTop: Spacing.four,
+  },
   actions: {
     flexDirection: rtlFlexDirection.row,
+    // Hug the buttons' content at the start edge instead of stretching them full-width.
+    // Plain `flex-start` — the app runs under forced native RTL, which already flips
+    // the cross-axis edges, so `rtlAlign` here would flip them a second time.
+    alignSelf: 'flex-start',
     gap: Spacing.two,
     marginTop: Spacing.two,
-  },
-  actionButton: {
-    flex: 1,
   },
   row: {
     flexDirection: rtlFlexDirection.row,

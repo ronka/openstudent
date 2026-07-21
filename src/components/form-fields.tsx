@@ -1,5 +1,13 @@
 import type { ReactNode } from 'react';
-import { ScrollView, StyleSheet, View, type KeyboardTypeOptions, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  Switch,
+  View,
+  type KeyboardTypeOptions,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
 import { FilterChip } from '@/components/filter-chip';
 import { ThemedText } from '@/components/themed-text';
@@ -115,9 +123,48 @@ export function TextField({
   );
 }
 
+/** Labeled on/off row: label (plus optional hint) on the start side, switch on the end. */
+export function SwitchField({
+  label,
+  hint,
+  value,
+  onValueChange,
+}: {
+  label: string;
+  hint?: string;
+  value: boolean;
+  onValueChange: (value: boolean) => void;
+}) {
+  return (
+    <View style={styles.switchRow}>
+      <View style={styles.switchLabels}>
+        <ThemedText type="smallBold" style={styles.label}>
+          {label}
+        </ThemedText>
+        {hint && (
+          <ThemedText type="small" themeColor="textSecondary" style={styles.label}>
+            {hint}
+          </ThemedText>
+        )}
+      </View>
+      <Switch value={value} onValueChange={onValueChange} />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   field: {
     gap: Spacing.two,
+  },
+  switchRow: {
+    flexDirection: rtlFlexDirection.row,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+  },
+  switchLabels: {
+    flex: 1,
+    gap: Spacing.half,
   },
   label: {
     textAlign: rtlTextAlign.start,

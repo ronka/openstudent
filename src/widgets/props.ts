@@ -148,7 +148,7 @@ export function buildProgressTimeline(
 ): WidgetTimelineEntry<ProgressProps>[] {
   // Degree % and GPA are grade-derived, not date-derived, so a single snapshot suffices.
   const degree = degreeStats(courses, getCurrentSemester(now));
-  const gpa = gpaStats(exams);
+  const gpa = gpaStats(exams, courses);
   return [
     {
       date: now,

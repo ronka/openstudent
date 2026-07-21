@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { Keyboard, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Keyboard, Modal, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -53,6 +53,11 @@ export function FormSheet({
   // sheet up via marginBottom (which doesn't grow it into the maxHeight cap).
   // While the keyboard is up it already covers the home-indicator inset, so drop it.
   const raised = keyboardHeight > 0;
+  const { height: windowHeight } = useWindowDimensions();
+  // The cap has to come off the space that's actually left above the keyboard: a
+  // percentage maxHeight measures the full screen, so a tall sheet lifted by
+  // `marginBottom` would run off the top edge and clip its own header.
+  const maxHeight = (windowHeight - keyboardHeight) * 0.9;
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -61,7 +66,11 @@ export function FormSheet({
         <ThemedView
           style={[
             styles.sheet,
-            { marginBottom: keyboardHeight, paddingBottom: raised ? Spacing.four : insets.bottom + Spacing.four },
+            {
+              maxHeight,
+              marginBottom: keyboardHeight,
+              paddingBottom: raised ? Spacing.four : insets.bottom + Spacing.four,
+            },
           ]}>
           <View style={styles.header}>
             <ThemedText style={styles.title}>{title}</ThemedText>
@@ -83,11 +92,15 @@ export function SheetButton({
   onPress,
   disabled,
   variant = 'primary',
+  size = 'md',
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
   variant?: 'primary' | 'ghost' | 'destructive';
+  /** `sm` is for inline page actions (e.g. the course header), where a full-height
+   * sheet button would dominate the screen. `md` stays the default for sheets. */
+  size?: 'md' | 'sm';
 }) {
   const isGhost = variant === 'ghost';
   const isDestructive = variant === 'destructive' && !disabled;
@@ -96,7 +109,7 @@ export function SheetButton({
       <ThemedView
         type={isGhost || disabled ? 'backgroundElement' : 'text'}
         className={isDestructive ? 'bg-destructive' : undefined}
-        style={styles.button}>
+        style={[styles.button, size === 'sm' && styles.buttonSm]}>
         <ThemedText
           type="smallBold"
           themeColor={isGhost || disabled ? 'textSecondary' : 'background'}
@@ -119,6 +132,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
     alignItems: 'center',
   },
+  buttonSm: {
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.four,
+    borderRadius: Radius.pill,
+  },
   buttonText: {
     textAlign: rtlTextAlign.center,
   },
@@ -138,7 +156,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: Radius.xl,
     paddingHorizontal: Spacing.three,
     paddingTop: Spacing.three,
-    maxHeight: '90%',
   },
   header: {
     flexDirection: rtlFlexDirection.row,

@@ -53,6 +53,18 @@ export function degreeStats(courses: Course[], current: CurrentSemester = getCur
   };
 }
 
+/**
+ * Exams whose grades carry numeric weight. Grades of courses marked "עובר בינארי"
+ * are dropped: the course still counts as passed for credits, but its grade must not
+ * move the average. Both the average and the grade trend go through here so the
+ * homepage, the chart and the widget can never disagree.
+ */
+export function examsForGpa(exams: Exam[], courses: Course[]): Exam[] {
+  const binaryPassCourseIds = new Set(courses.filter((course) => course.binaryPass).map((course) => course.id));
+  if (binaryPassCourseIds.size === 0) return exams;
+  return exams.filter((exam) => !binaryPassCourseIds.has(exam.courseId));
+}
+
 export interface GpaStats {
   /** Plain average grade over graded exams; 0 when none. Exams carry no credits,
    * so this is unweighted — consistent with the per-exam min/max/count beside it. */
@@ -66,14 +78,15 @@ export interface GpaStats {
  * Average exam grade (the "ממוצע"). Sourced from exam grades rather than course
  * grades so it lines up with the grade-trend chart, which plots each graded exam.
  * A course with multiple graded exams (e.g. moed A + moed B) contributes each one.
+ * `courses` is needed to drop "עובר בינארי" courses (see `examsForGpa`).
  */
-export function gpaStats(exams: Exam[]): GpaStats {
+export function gpaStats(exams: Exam[], courses: Course[]): GpaStats {
   let sum = 0;
   let count = 0;
   let min = Infinity;
   let max = -Infinity;
 
-  for (const exam of exams) {
+  for (const exam of examsForGpa(exams, courses)) {
     if (exam.grade === undefined) continue;
     sum += exam.grade;
     count += 1;
@@ -115,9 +128,10 @@ export interface GradePoint {
   title: string;
 }
 
-/** Graded exams sorted oldest → newest, for the grade-trend mini chart. */
-export function gradeTimeline(exams: Exam[]): GradePoint[] {
-  return exams
+/** Graded exams sorted oldest → newest, for the grade-trend mini chart. Mirrors the
+ * average: "עובר בינארי" grades are left out so the chart matches the number above it. */
+export function gradeTimeline(exams: Exam[], courses: Course[]): GradePoint[] {
+  return examsForGpa(exams, courses)
     .filter((exam): exam is Exam & { grade: number } => exam.grade !== undefined)
     .sort((a, b) => a.date.localeCompare(b.date))
     .map((exam) => ({ date: exam.date, grade: exam.grade, title: exam.title }));

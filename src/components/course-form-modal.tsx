@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { ChipField, TextField } from '@/components/form-fields';
+import { ChipField, SwitchField, TextField } from '@/components/form-fields';
 import { FormSheet, SheetButton } from '@/components/form-sheet';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -36,6 +36,7 @@ export function CourseFormModal({ visible, onClose, course }: { visible: boolean
   const [year, setYear] = useState('');
   const [semester, setSemester] = useState<Semester | undefined>(undefined);
   const [grade, setGrade] = useState('');
+  const [binaryPass, setBinaryPass] = useState(false);
   const [notes, setNotes] = useState('');
 
   // Reset from props each time the sheet opens.
@@ -45,6 +46,7 @@ export function CourseFormModal({ visible, onClose, course }: { visible: boolean
     setYear(course.year !== undefined ? String(course.year) : '');
     setSemester(course.semester);
     setGrade(course.grade !== undefined ? String(course.grade) : '');
+    setBinaryPass(course.binaryPass ?? false);
     setNotes(course.notes ?? '');
     // Only re-run when the sheet is (re)opened.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -56,15 +58,16 @@ export function CourseFormModal({ visible, onClose, course }: { visible: boolean
       year: toNumber(year),
       semester,
       grade: toNumber(grade),
+      binaryPass: binaryPass || undefined,
       notes: notes.trim() || undefined,
     });
-    posthog.capture('course_updated', { course_id: course.id });
+    posthog.capture('course_updated', { course_id: course.id, binary_pass: binaryPass });
     onClose();
   }
 
   return (
     <FormSheet visible={visible} onClose={onClose} title="עריכת קורס">
-      <View style={styles.body}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.body}>
         <View style={styles.identity}>
           <ThemedText style={styles.name}>{course.name}</ThemedText>
           <View style={styles.metaRow}>
@@ -125,10 +128,17 @@ export function CourseFormModal({ visible, onClose, course }: { visible: boolean
           </View>
         </View>
 
+        <SwitchField
+          label="עובר בינארי"
+          hint="הקורס נחשב כקורס שעברת, אך הציון לא נכלל בחישוב הממוצע"
+          value={binaryPass}
+          onValueChange={setBinaryPass}
+        />
+
         <TextField label="הערות (אופציונלי)" value={notes} onChangeText={setNotes} placeholder="הערות" />
 
         <SheetButton label="שמירה" onPress={handleSave} />
-      </View>
+      </ScrollView>
     </FormSheet>
   );
 }

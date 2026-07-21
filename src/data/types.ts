@@ -35,6 +35,14 @@ export interface Course {
   year?: number;
   semester?: Semester;
   grade?: number;
+  /**
+   * "עובר בינארי" — the numeric grade was converted to a binary pass (האוניברסיטה
+   * הפתוחה allows this in defined tracks, e.g. up to 3 courses in a bachelor's).
+   * The course counts as passed for credits/degree progress, but its grades carry
+   * no numeric weight: they're excluded from the average and the grade trend
+   * (see `examsForGpa`). Implies `passed` in `deriveCourseStatus`.
+   */
+  binaryPass?: boolean;
   notes?: string;
 }
 

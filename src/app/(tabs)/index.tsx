@@ -63,8 +63,8 @@ export default function DashboardScreen() {
   const [quote] = useState(() => randomQuote());
 
   const degree = useMemo(() => degreeStats(courses), [courses]);
-  const gpa = useMemo(() => gpaStats(exams), [exams]);
-  const grades = useMemo(() => gradeTimeline(exams), [exams]);
+  const gpa = useMemo(() => gpaStats(exams, courses), [exams, courses]);
+  const grades = useMemo(() => gradeTimeline(exams, courses), [exams, courses]);
   const upcomingExams = useMemo(() => upcomingExamsSorted(exams), [exams]);
   const nextExam = upcomingExams[0];
 

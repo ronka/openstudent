@@ -1,6 +1,6 @@
 import type { Course, CourseStatus, Semester } from './types';
 
-type SemesterFields = Pick<Course, 'year' | 'semester' | 'grade' | 'statusOverride'>;
+type SemesterFields = Pick<Course, 'year' | 'semester' | 'grade' | 'statusOverride' | 'binaryPass'>;
 
 /**
  * Open University semester calendar (confirmed with the user):
@@ -42,6 +42,10 @@ export function deriveCourseStatus(course: SemesterFields, current: CurrentSemes
   // A manual override, once set, wins over auto-derivation — every read site
   // (courses list, detail, plan, stats) goes through here, so they all honor it.
   if (course.statusOverride) return course.statusOverride;
+  // "עובר בינארי" is a passing outcome by definition, and it usually has no numeric
+  // grade to derive from — so it must imply `passed` or the credits would go missing
+  // from degree progress. A manual override (e.g. נכשל) still wins, above.
+  if (course.binaryPass) return 'passed';
   if (course.grade !== undefined) return 'passed';
   if (isCurrentSemester(course, current)) return 'studying';
   return 'planned';
