@@ -1,5 +1,6 @@
+import { Image } from 'expo-image';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CourseCatalogList } from '@/components/course-catalog-list';
@@ -56,9 +57,14 @@ function copyForStruggles(struggles: Set<StruggleKey>, single: Record<StruggleKe
   return single.progress;
 }
 
-/** Total onboarding screens in the finished flow (§4). Step 7 is the notifications
- * opt-in, step 8 the summary. */
-const TOTAL_STEPS = 8;
+/** Widgets are iOS-only (`expo-widgets` has no Android target — see src/widgets/updater.ts), so the
+ * widgets pitch (step 8) only appears on iOS. */
+const IS_IOS = Platform.OS === 'ios';
+
+/** Total onboarding screens in the finished flow (§4). Step 7 is the notifications opt-in, step 8
+ * the iOS-only widgets pitch, step 9 the summary. On non-iOS the widgets step is skipped, so the
+ * flow — and the progress dots — are one shorter. */
+const TOTAL_STEPS = IS_IOS ? 9 : 8;
 
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
@@ -96,8 +102,12 @@ export default function OnboardingScreen() {
     posthog.capture('onboarding_started');
   }, []);
 
+  useEffect(() => {
+    if (step === 8 && IS_IOS) posthog.capture('onboarding_widgets_shown');
+  }, [step]);
+
   function finish() {
-    // Step 7 is now the notifications opt-in; the summary moved to step 8.
+    // Step 7 is the notifications opt-in; the (iOS-only) widgets pitch and summary follow.
     setStep(7);
   }
 
@@ -108,13 +118,13 @@ export default function OnboardingScreen() {
     await enableNotifications();
     markPromptSeen();
     posthog.capture('onboarding_notifications_enabled');
-    setStep(8);
+    setStep(IS_IOS ? 8 : 9);
   }
 
   function skipNotifications() {
     markPromptSeen();
     posthog.capture('onboarding_notifications_skipped');
-    setStep(8);
+    setStep(IS_IOS ? 8 : 9);
   }
 
   function handleNameSubmit() {
@@ -240,7 +250,8 @@ export default function OnboardingScreen() {
       case 6:
       case 7:
       case 8:
-        // The course loop (and the notifications + summary steps after it) is treated as one unit: Back returns
+      case 9:
+        // The course loop (and the notifications + widgets + summary steps after it) is treated as one unit: Back returns
         // to course selection and drops the plan built on the way in, so re-picking — or
         // skipping — never carries stale rows into the final flush. Per-course task editing
         // happens later in-app (plan R1). `selectedCourses` is preserved, so the user lands
@@ -288,7 +299,7 @@ export default function OnboardingScreen() {
             </Pressable>
           )}
         </View>
-        <ProgressDots current={step} total={TOTAL_STEPS} />
+        <ProgressDots current={!IS_IOS && step === 9 ? 8 : step} total={TOTAL_STEPS} />
         <View style={styles.headerSide} />
       </View>
 
@@ -496,7 +507,34 @@ export default function OnboardingScreen() {
         </View>
       )}
 
-      {step === 8 && (
+      {step === 8 && IS_IOS && (
+        <View style={styles.step}>
+          <ScrollView contentContainerStyle={styles.stepBody}>
+            <ThemedText type="subtitle" style={styles.headline}>
+              וידג׳טים למסך הבית 📲
+            </ThemedText>
+            <Image
+              source={require('@/assets/images/widget-preview.png')}
+              style={styles.widgetPreview}
+              contentFit="contain"
+            />
+            <ThemedText themeColor="textSecondary" style={styles.body}>
+              מוסיפים וידג׳ט למסך הבית ורואים הכול במבט אחד — בלי לפתוח את האפליקציה: מטלות קרובות,
+              המבחן הבא, וההתקדמות בתואר.
+            </ThemedText>
+          </ScrollView>
+
+          <Pressable onPress={() => setStep(9)} style={({ pressed }) => pressed && styles.pressed}>
+            <ThemedView type="text" style={styles.primaryButton}>
+              <ThemedText type="smallBold" themeColor="background" style={styles.primaryButtonText}>
+                המשך
+              </ThemedText>
+            </ThemedView>
+          </Pressable>
+        </View>
+      )}
+
+      {step === 9 && (
         <View style={styles.step}>
           <ScrollView contentContainerStyle={styles.stepBody}>
             {createdCourses.length === 0 ? (
@@ -646,6 +684,11 @@ const styles = StyleSheet.create({
   },
   body: {
     textAlign: rtlTextAlign.start,
+  },
+  widgetPreview: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: Radius.lg,
   },
   nameField: {
     marginTop: Spacing.two,
