@@ -95,7 +95,11 @@
             }
           ]
         }
-      ]
+      ],
+      "expo-image",
+      "expo-sqlite",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "extra": {
       "supportsRTL": true,
