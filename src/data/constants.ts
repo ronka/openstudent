@@ -1,5 +1,14 @@
 import type { AssignmentStatus, AssignmentType, CourseLevel, CourseStatus, Semester } from './types';
 
+/**
+ * נק״ז required for the degree — the denominator of the progress bar. A bachelor's at
+ * האוניברסיטה הפתוחה is 120 נק״ז in the common tracks; extended/double-major tracks run
+ * higher (132+), so this is a typical target rather than a universal one. Fixed for now;
+ * if per-student targets are ever needed this becomes a profile setting (see `profile.ts`)
+ * and every read below goes through that instead.
+ */
+export const DEGREE_CREDITS_TARGET = 120;
+
 export const COURSE_STATUSES: CourseStatus[] = ['planned', 'studying', 'passed', 'failed', 'abandoned'];
 
 export const COURSE_STATUS_LABELS: Record<CourseStatus, string> = {

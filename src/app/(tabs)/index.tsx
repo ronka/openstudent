@@ -12,6 +12,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Text } from '@/components/ui/text';
 import { Radius, Spacing } from '@/constants/theme';
+import { DEGREE_CREDITS_TARGET } from '@/data/constants';
 import { enableNotifications, markPromptSeen, usePromptSeen } from '@/data/notification-settings';
 import { useName } from '@/data/profile';
 import { randomQuote } from '@/data/quotes';
@@ -171,7 +172,12 @@ export default function DashboardScreen() {
         </View>
 
         <View style={styles.grid}>
-          <StatCard value={`${degreePercent}%`} label="מהתואר" progress={degree.degreePct} />
+          <StatCard
+            value={`${degreePercent}%`}
+            label="מהתואר"
+            caption={`${degree.passedCredits}/${DEGREE_CREDITS_TARGET} נק״ז`}
+            progress={degree.degreePct}
+          />
           <StatCard
             value={gpa.count > 0 ? gpa.gpa.toFixed(1) : '—'}
             label="ציון ממוצע"

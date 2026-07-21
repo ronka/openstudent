@@ -4,13 +4,19 @@
  * reusable/testable. Nothing here reads the store directly — always pass the arrays in.
  */
 
+import { DEGREE_CREDITS_TARGET } from './constants';
 import { deriveCourseStatus, getCurrentSemester, type CurrentSemester } from './semester';
 import type { Assignment, Course, Exam } from './types';
 
 export interface DegreeStats {
+  /** Credits across the courses the student has entered — planned + studying + passed.
+   * This is "how much is on the plan", not the degree requirement: use
+   * `DEGREE_CREDITS_TARGET` for progress, never this. */
   totalCredits: number;
   passedCredits: number;
-  /** Passed credits / total credits, clamped to 0..1 (0 when there are no credits). */
+  /** Passed credits / `DEGREE_CREDITS_TARGET`, clamped to 0..1. Deliberately *not*
+   * over `totalCredits`: that would make the bar mean "% of the courses I logged",
+   * hitting 100% after three passed courses and dropping every time one is added. */
   degreePct: number;
   passedCount: number;
   studyingCount: number;
@@ -27,8 +33,8 @@ export function degreeStats(courses: Course[], current: CurrentSemester = getCur
 
   for (const course of courses) {
     const status = deriveCourseStatus(course, current);
-    // Terminal non-passing outcomes are out of the degree entirely — they neither count
-    // as progress nor inflate the denominator (which would drag down degreePct).
+    // Terminal non-passing outcomes are out of the degree entirely — they're neither
+    // progress nor part of the plan's credit total.
     if (status === 'failed' || status === 'abandoned') continue;
     const credits = course.credits ?? 0;
     totalCredits += credits;
@@ -45,7 +51,8 @@ export function degreeStats(courses: Course[], current: CurrentSemester = getCur
   return {
     totalCredits,
     passedCredits,
-    degreePct: totalCredits > 0 ? passedCredits / totalCredits : 0,
+    // Clamped: passing more than the target (extra courses, exemptions) still reads 100%.
+    degreePct: Math.min(passedCredits / DEGREE_CREDITS_TARGET, 1),
     passedCount,
     studyingCount,
     plannedCount,

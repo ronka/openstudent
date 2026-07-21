@@ -13,6 +13,7 @@
 
 import type { WidgetTimelineEntry } from 'expo-widgets';
 
+import { DEGREE_CREDITS_TARGET } from '@/data/constants';
 import { getCurrentSemester } from '@/data/semester';
 import { degreeStats, gpaStats, upcomingAssignmentsSorted, upcomingExamsSorted } from '@/data/stats';
 import type { Assignment, Course, Exam } from '@/data/types';
@@ -48,6 +49,8 @@ export interface ProgressProps {
   degreePct: number;
   degreePctLabel: string;
   passedCredits: number;
+  /** The degree requirement (`DEGREE_CREDITS_TARGET`) — the same denominator
+   * `degreePct` uses, so the ring and the `x/y נק״ז` label always agree. */
   totalCredits: number;
   creditsLabel: string;
   gpa: number;
@@ -156,8 +159,8 @@ export function buildProgressTimeline(
         degreePct: degree.degreePct,
         degreePctLabel: `${Math.round(degree.degreePct * 100)}%`,
         passedCredits: degree.passedCredits,
-        totalCredits: degree.totalCredits,
-        creditsLabel: `${degree.passedCredits}/${degree.totalCredits}`,
+        totalCredits: DEGREE_CREDITS_TARGET,
+        creditsLabel: `${degree.passedCredits}/${DEGREE_CREDITS_TARGET}`,
         gpa: gpa.gpa,
         gpaLabel: gpa.count > 0 ? gpa.gpa.toFixed(1) : '—',
       },
