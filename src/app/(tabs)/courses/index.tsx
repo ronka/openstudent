@@ -1,6 +1,6 @@
 import { Link } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { Badge } from '@/components/badge';
 import { Fab } from '@/components/capture-fab';
@@ -95,7 +95,10 @@ export default function CoursesScreen() {
   return (
     <ThemedView style={styles.container}>
       <View style={styles.filters}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+        {/* Wrapping row rather than a horizontal ScrollView: a horizontal ScrollView
+            under forced-RTL both fails to scroll and leaves its first (rightmost) chip
+            with a dead tap zone on iOS. Wrapping sidesteps both and shows every filter. */}
+        <View style={styles.chipRow}>
           <FilterChip
             label={`${STATUS_FILTER_EMOJI.all} הכל`}
             selected={statusFilter === 'all'}
@@ -115,7 +118,7 @@ export default function CoursesScreen() {
               }}
             />
           ))}
-        </ScrollView>
+        </View>
         <View style={styles.chipRow}>
           <CourseFilterChip
             courses={courses}
@@ -126,6 +129,17 @@ export default function CoursesScreen() {
             }}
             clearLabel="כל הקורסים"
           />
+          {(statusFilter !== 'all' || courseFilter !== 'all') && (
+            <FilterChip
+              label="✕ נקה סינון"
+              selected={false}
+              onPress={() => {
+                setStatusFilter('all');
+                setCourseFilter('all');
+                posthog.capture('course_filters_cleared');
+              }}
+            />
+          )}
         </View>
       </View>
 
@@ -179,6 +193,7 @@ const styles = StyleSheet.create({
   },
   chipRow: {
     flexDirection: rtlFlexDirection.row,
+    flexWrap: 'wrap',
     gap: Spacing.two,
     paddingHorizontal: Spacing.three,
   },
