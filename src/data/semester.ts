@@ -1,6 +1,6 @@
 import type { Course, CourseStatus, Semester } from './types';
 
-type SemesterFields = Pick<Course, 'year' | 'semester' | 'grade'>;
+type SemesterFields = Pick<Course, 'year' | 'semester' | 'grade' | 'statusOverride'>;
 
 /**
  * Open University semester calendar (confirmed with the user):
@@ -39,6 +39,9 @@ export function isCurrentSemester(course: SemesterFields, current: CurrentSemest
 }
 
 export function deriveCourseStatus(course: SemesterFields, current: CurrentSemester): CourseStatus {
+  // A manual override, once set, wins over auto-derivation — every read site
+  // (courses list, detail, plan, stats) goes through here, so they all honor it.
+  if (course.statusOverride) return course.statusOverride;
   if (course.grade !== undefined) return 'passed';
   if (isCurrentSemester(course, current)) return 'studying';
   return 'planned';

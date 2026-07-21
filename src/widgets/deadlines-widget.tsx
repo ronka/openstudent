@@ -1,5 +1,5 @@
 import { HStack, Spacer, Text, VStack } from '@expo/ui/swift-ui';
-import { font, foregroundColor, foregroundStyle, lineLimit, padding } from '@expo/ui/swift-ui/modifiers';
+import { font, foregroundColor, foregroundStyle, lineLimit, minimumScaleFactor, padding } from '@expo/ui/swift-ui/modifiers';
 import { createWidget, type WidgetEnvironment } from 'expo-widgets';
 
 import type { DeadlinesProps } from './props';
@@ -27,10 +27,16 @@ const DeadlinesWidget = (props: DeadlinesProps, environment: WidgetEnvironment) 
 
   const items = (props.items ?? []).slice(0, isMedium ? 3 : 1);
 
+  const title = (
+    <Text modifiers={[font({ size: 13, weight: 'semibold' }), muted, lineLimit(1), minimumScaleFactor(0.7)]}>
+      מטלות קרובות
+    </Text>
+  );
+
   if (items.length === 0) {
     return (
       <VStack alignment="leading" spacing={6} modifiers={[padding({ all: 16 })]}>
-        <Text modifiers={[font({ size: 13, weight: 'semibold' }), muted]}>מטלות קרובות</Text>
+        {title}
         <Spacer />
         <Text modifiers={[font({ size: 15 }), muted]}>אין מטלות פתוחות</Text>
         <Spacer />
@@ -38,26 +44,45 @@ const DeadlinesWidget = (props: DeadlinesProps, environment: WidgetEnvironment) 
     );
   }
 
+  // NOTE: children must be a *flat* list of element nodes. The widget jsx runtime does
+  // not flatten nested arrays, and the native side (DynamicView.swift) does
+  // `children.compactMap { $0 as? [String: Any] }` — so a nested array produced by
+  // `items.map(...)` is silently dropped and the widget renders blank. We therefore
+  // emit each row as an individual child (null entries are safely dropped by compactMap).
+  const renderRow = (item: DeadlinesProps['items'][number], index: number) => {
+    const urgent = item.daysLeft !== null && item.daysLeft <= 1;
+    return (
+      <VStack key={index} alignment="leading" spacing={2}>
+        <HStack spacing={6}>
+          <Text
+            modifiers={[
+              font({ size: isMedium ? 15 : 17, weight: 'semibold' }),
+              lineLimit(1),
+              minimumScaleFactor(0.8),
+            ]}>
+            {item.name}
+          </Text>
+          <Spacer />
+          <Text
+            modifiers={[
+              font({ size: 13, weight: 'medium' }),
+              foregroundColor(urgent ? danger : warning),
+              lineLimit(1),
+            ]}>
+            {item.daysLabel}
+          </Text>
+        </HStack>
+        <Text modifiers={[font({ size: 12 }), muted, lineLimit(1)]}>{item.courseName}</Text>
+      </VStack>
+    );
+  };
+
   return (
     <VStack alignment="leading" spacing={isMedium ? 10 : 6} modifiers={[padding({ all: 16 })]}>
-      <Text modifiers={[font({ size: 13, weight: 'semibold' }), muted]}>מטלות קרובות</Text>
-      {items.map((item, index) => {
-        const urgent = item.daysLeft !== null && item.daysLeft <= 1;
-        return (
-          <VStack key={index} alignment="leading" spacing={2}>
-            <HStack spacing={6}>
-              <Text modifiers={[font({ size: isMedium ? 15 : 17, weight: 'semibold' }), lineLimit(1)]}>
-                {item.name}
-              </Text>
-              <Spacer />
-              <Text modifiers={[font({ size: 13, weight: 'medium' }), foregroundColor(urgent ? danger : warning)]}>
-                {item.daysLabel}
-              </Text>
-            </HStack>
-            <Text modifiers={[font({ size: 12 }), muted, lineLimit(1)]}>{item.courseName}</Text>
-          </VStack>
-        );
-      })}
+      {title}
+      {items[0] ? renderRow(items[0], 0) : null}
+      {items[1] ? renderRow(items[1], 1) : null}
+      {items[2] ? renderRow(items[2], 2) : null}
       <Spacer />
     </VStack>
   );

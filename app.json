@@ -28,7 +28,8 @@
         "backgroundColor": "#ffffff",
         "image": "./assets/images/icon.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.ronkaa.openstudent"
     },
     "web": {
       "output": "server"
@@ -65,19 +66,32 @@
               "name": "DeadlinesWidget",
               "displayName": "מטלות קרובות",
               "description": "המטלות הפתוחות הקרובות ביותר",
-              "ios": { "supportedFamilies": ["systemSmall", "systemMedium"] }
+              "ios": {
+                "supportedFamilies": [
+                  "systemSmall",
+                  "systemMedium"
+                ]
+              }
             },
             {
               "name": "ExamWidget",
               "displayName": "המבחן הבא",
               "description": "ספירה לאחור למבחן הקרוב",
-              "ios": { "supportedFamilies": ["systemSmall"] }
+              "ios": {
+                "supportedFamilies": [
+                  "systemSmall"
+                ]
+              }
             },
             {
               "name": "ProgressWidget",
               "displayName": "התקדמות בתואר",
               "description": "אחוז השלמת התואר והממוצע",
-              "ios": { "supportedFamilies": ["systemSmall"] }
+              "ios": {
+                "supportedFamilies": [
+                  "systemSmall"
+                ]
+              }
             }
           ]
         }

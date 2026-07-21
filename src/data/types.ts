@@ -8,7 +8,12 @@
 export type Faculty = string;
 export type CourseType = 'חובה' | 'בחירה' | 'סמינר';
 export type CourseLevel = 'ר' | 'מ';
-export type CourseStatus = 'planned' | 'studying' | 'passed';
+/**
+ * `failed`/`abandoned` are terminal, non-passing outcomes (didn't pass the exam,
+ * or dropped mid-way). They're never auto-derived — only set manually via the status
+ * badge — and are excluded from degree-progress math (see `degreeStats`).
+ */
+export type CourseStatus = 'planned' | 'studying' | 'passed' | 'failed' | 'abandoned';
 export type Semester = 'א' | 'ב' | 'ג';
 export type AssignmentStatus = 'todo' | 'done';
 export type AssignmentType = 'MAMAN' | 'MAMACH';
@@ -23,6 +28,10 @@ export interface Course {
   type: CourseType;
   level?: CourseLevel;
   status: CourseStatus;
+  /** Manual status override. When set, it wins over the derived status (see
+   * `deriveCourseStatus`); when undefined, status falls back to auto-derivation
+   * from `year`/`semester`/`grade`. Cleared by picking "אוטומטי". */
+  statusOverride?: CourseStatus;
   year?: number;
   semester?: Semester;
   grade?: number;

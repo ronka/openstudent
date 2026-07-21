@@ -5,9 +5,9 @@ import { ChipField, TextField } from '@/components/form-fields';
 import { FormSheet, SheetButton } from '@/components/form-sheet';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
-import { COURSE_LEVEL_LABELS, SEMESTERS } from '@/data/constants';
+import { COURSE_LEVEL_LABELS, COURSE_STATUS_LABELS, COURSE_STATUSES, SEMESTERS } from '@/data/constants';
 import { coursesCollection } from '@/data/store';
-import type { Course, Semester } from '@/data/types';
+import type { Course, CourseStatus, Semester } from '@/data/types';
 import { posthog } from '@/utils/analytics';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
@@ -22,9 +22,17 @@ function toNumber(value: string): number | undefined {
 /**
  * Edit-only sheet for an existing (catalog-created) course. Identity fields
  * (name/number/faculty/credits/type/level) are catalog-owned and shown read-only;
- * only year/semester/grade/notes can change. Status is never edited — it's derived.
+ * only status/year/semester/grade/notes can change. Status is edited as a manual
+ * override here (same as the status badge on the detail screen); "אוטומטי" clears
+ * the override so status reverts to auto-derivation from year/semester/grade.
  */
+
+/** Status selection in the form: an explicit override, or 'auto' to clear it. */
+type StatusChoice = CourseStatus | 'auto';
+const STATUS_CHOICES: StatusChoice[] = ['auto', ...COURSE_STATUSES];
+const STATUS_CHOICE_LABELS: Record<StatusChoice, string> = { auto: 'אוטומטי', ...COURSE_STATUS_LABELS };
 export function CourseFormModal({ visible, onClose, course }: { visible: boolean; onClose: () => void; course: Course }) {
+  const [status, setStatus] = useState<StatusChoice>('auto');
   const [year, setYear] = useState('');
   const [semester, setSemester] = useState<Semester | undefined>(undefined);
   const [grade, setGrade] = useState('');
@@ -33,6 +41,7 @@ export function CourseFormModal({ visible, onClose, course }: { visible: boolean
   // Reset from props each time the sheet opens.
   useEffect(() => {
     if (!visible) return;
+    setStatus(course.statusOverride ?? 'auto');
     setYear(course.year !== undefined ? String(course.year) : '');
     setSemester(course.semester);
     setGrade(course.grade !== undefined ? String(course.grade) : '');
@@ -43,6 +52,7 @@ export function CourseFormModal({ visible, onClose, course }: { visible: boolean
 
   function handleSave() {
     coursesCollection.update(course.id, {
+      statusOverride: status === 'auto' ? undefined : status,
       year: toNumber(year),
       semester,
       grade: toNumber(grade),
@@ -83,6 +93,14 @@ export function CourseFormModal({ visible, onClose, course }: { visible: boolean
             )}
           </View>
         </View>
+
+        <ChipField
+          label="סטטוס"
+          options={STATUS_CHOICES}
+          getLabel={(option) => STATUS_CHOICE_LABELS[option]}
+          isSelected={(option) => status === option}
+          onSelect={setStatus}
+        />
 
         <ChipField
           label="סמסטר"

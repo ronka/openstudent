@@ -32,7 +32,7 @@ export function initWidgets(): void {
     const courses = coursesCollection.getSnapshot();
     deadlinesWidget.updateTimeline(buildDeadlinesTimeline(courses, assignmentsCollection.getSnapshot(), now));
     examWidget.updateTimeline(buildExamTimeline(courses, examsCollection.getSnapshot(), now));
-    progressWidget.updateTimeline(buildProgressTimeline(courses, now));
+    progressWidget.updateTimeline(buildProgressTimeline(courses, examsCollection.getSnapshot(), now));
   };
 
   // Coalesce mutation bursts into a single refresh.

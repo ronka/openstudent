@@ -1,17 +1,21 @@
 import type { AssignmentStatus, AssignmentType, CourseLevel, CourseStatus, Semester } from './types';
 
-export const COURSE_STATUSES: CourseStatus[] = ['planned', 'studying', 'passed'];
+export const COURSE_STATUSES: CourseStatus[] = ['planned', 'studying', 'passed', 'failed', 'abandoned'];
 
 export const COURSE_STATUS_LABELS: Record<CourseStatus, string> = {
   planned: 'מתוכנן',
   studying: 'בלימוד',
   passed: 'עובר',
+  failed: 'נכשל',
+  abandoned: 'נזנח',
 };
 
-export const COURSE_STATUS_TONES: Record<CourseStatus, 'neutral' | 'info' | 'success'> = {
+export const COURSE_STATUS_TONES: Record<CourseStatus, 'neutral' | 'info' | 'success' | 'warning'> = {
   planned: 'neutral',
   studying: 'info',
   passed: 'success',
+  failed: 'warning',
+  abandoned: 'neutral',
 };
 
 export const ASSIGNMENT_STATUSES: AssignmentStatus[] = ['todo', 'done'];

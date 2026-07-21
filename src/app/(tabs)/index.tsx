@@ -63,7 +63,7 @@ export default function DashboardScreen() {
   const [quote] = useState(() => randomQuote());
 
   const degree = useMemo(() => degreeStats(courses), [courses]);
-  const gpa = useMemo(() => gpaStats(courses), [courses]);
+  const gpa = useMemo(() => gpaStats(exams), [exams]);
   const grades = useMemo(() => gradeTimeline(exams), [exams]);
   const upcomingExams = useMemo(() => upcomingExamsSorted(exams), [exams]);
   const nextExam = upcomingExams[0];
@@ -175,7 +175,7 @@ export default function DashboardScreen() {
           <StatCard
             value={gpa.count > 0 ? gpa.gpa.toFixed(1) : '—'}
             label="ציון ממוצע"
-            caption={`${gpa.count} קורסים`}
+            caption={`${gpa.count} מבחנים`}
           />
         </View>
 

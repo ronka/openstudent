@@ -4,6 +4,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Badge } from '@/components/badge';
 import { CourseFormModal } from '@/components/course-form-modal';
+import { CourseStatusModal } from '@/components/course-status-modal';
 import { EntityRow } from '@/components/entity-row';
 import { ExamFormModal } from '@/components/exam-form-modal';
 import { SheetButton } from '@/components/form-sheet';
@@ -37,6 +38,7 @@ export default function CourseDetailScreen() {
   const screenPadding = useScreenPadding();
 
   const [showCourseForm, setShowCourseForm] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
   const [showExamForm, setShowExamForm] = useState(false);
   const [editingExam, setEditingExam] = useState<Exam | undefined>(undefined);
 
@@ -45,6 +47,9 @@ export default function CourseDetailScreen() {
   }
 
   const status = deriveCourseStatus(course, current);
+  // What auto-derivation would pick if the manual override were cleared — shown on the
+  // "אוטומטי" row so the user can see where reverting lands.
+  const autoStatus = deriveCourseStatus({ ...course, statusOverride: undefined }, current);
 
   function openCreateExam() {
     setEditingExam(undefined);
@@ -82,7 +87,9 @@ export default function CourseDetailScreen() {
             <ThemedText type="subtitle" style={styles.name}>
               {course.name}
             </ThemedText>
-            <Badge label={COURSE_STATUS_LABELS[status]} tone={COURSE_STATUS_TONES[status]} />
+            <Pressable onPress={() => setShowStatusModal(true)} style={({ pressed }) => pressed && styles.pressed}>
+              <Badge label={COURSE_STATUS_LABELS[status]} tone={COURSE_STATUS_TONES[status]} />
+            </Pressable>
           </View>
 
           <View style={styles.metaRow}>
@@ -174,6 +181,21 @@ export default function CourseDetailScreen() {
         </Section>
 
       </ScrollView>
+
+      <CourseStatusModal
+        visible={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        override={course.statusOverride}
+        derived={autoStatus}
+        onSelect={(next) => {
+          coursesCollection.update(course.id, { statusOverride: next });
+          posthog.capture('course_status_changed', { course_id: course.id, to_status: next, source: 'manual' });
+        }}
+        onClear={() => {
+          coursesCollection.update(course.id, { statusOverride: undefined });
+          posthog.capture('course_status_changed', { course_id: course.id, to_status: 'auto', source: 'manual' });
+        }}
+      />
 
       <CourseFormModal visible={showCourseForm} onClose={() => setShowCourseForm(false)} course={course} />
 

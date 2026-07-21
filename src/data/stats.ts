@@ -26,9 +26,12 @@ export function degreeStats(courses: Course[], current: CurrentSemester = getCur
   let plannedCount = 0;
 
   for (const course of courses) {
+    const status = deriveCourseStatus(course, current);
+    // Terminal non-passing outcomes are out of the degree entirely — they neither count
+    // as progress nor inflate the denominator (which would drag down degreePct).
+    if (status === 'failed' || status === 'abandoned') continue;
     const credits = course.credits ?? 0;
     totalCredits += credits;
-    const status = deriveCourseStatus(course, current);
     if (status === 'passed') {
       passedCredits += credits;
       passedCount += 1;
@@ -51,33 +54,35 @@ export function degreeStats(courses: Course[], current: CurrentSemester = getCur
 }
 
 export interface GpaStats {
-  /** Credit-weighted average grade over passed courses that have a grade; 0 when none. */
+  /** Plain average grade over graded exams; 0 when none. Exams carry no credits,
+   * so this is unweighted — consistent with the per-exam min/max/count beside it. */
   gpa: number;
   min: number;
   max: number;
   count: number;
 }
 
-export function gpaStats(courses: Course[]): GpaStats {
-  let weightedSum = 0;
-  let creditSum = 0;
+/**
+ * Average exam grade (the "ממוצע"). Sourced from exam grades rather than course
+ * grades so it lines up with the grade-trend chart, which plots each graded exam.
+ * A course with multiple graded exams (e.g. moed A + moed B) contributes each one.
+ */
+export function gpaStats(exams: Exam[]): GpaStats {
+  let sum = 0;
   let count = 0;
   let min = Infinity;
   let max = -Infinity;
 
-  for (const course of courses) {
-    if (course.grade === undefined) continue;
-    // Weight by credits, but fall back to 1 so credit-less courses still count.
-    const weight = course.credits ?? 1;
-    weightedSum += course.grade * weight;
-    creditSum += weight;
+  for (const exam of exams) {
+    if (exam.grade === undefined) continue;
+    sum += exam.grade;
     count += 1;
-    min = Math.min(min, course.grade);
-    max = Math.max(max, course.grade);
+    min = Math.min(min, exam.grade);
+    max = Math.max(max, exam.grade);
   }
 
   return {
-    gpa: creditSum > 0 ? weightedSum / creditSum : 0,
+    gpa: count > 0 ? sum / count : 0,
     min: count > 0 ? min : 0,
     max: count > 0 ? max : 0,
     count,

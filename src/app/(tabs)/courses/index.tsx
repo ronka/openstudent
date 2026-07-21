@@ -27,6 +27,8 @@ const STATUS_FILTER_EMOJI: Record<StatusFilter, string> = {
   planned: '🗓️',
   studying: '📖',
   passed: '✅',
+  failed: '❌',
+  abandoned: '🚫',
 };
 
 function CourseRow({ course, current }: { course: Course; current: ReturnType<typeof getCurrentSemester> }) {
