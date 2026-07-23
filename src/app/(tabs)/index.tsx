@@ -222,7 +222,7 @@ export default function DashboardScreen() {
               ‹
             </Text>
           }
-          href="/pomodoro"
+          href="/more/pomodoro"
           style={styles.fullWidth}
           onPress={() => posthog.capture('dashboard_pomodoro_promo_tapped')}
         />

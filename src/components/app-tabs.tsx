@@ -33,18 +33,13 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Icon sf="graduationcap" md="school" />
       </NativeTabs.Trigger>
 
+      {/* Android's native tab bar caps at 5 items. The remaining screens (plan,
+          study-groups, pomodoro, profile, settings) live inside this "עוד" tab's
+          stack — a `hidden` trigger cannot be navigated to, so they can't be tabs. */}
       <NativeTabs.Trigger name="more">
         <NativeTabs.Trigger.Label>עוד</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="ellipsis" md="more_horiz" />
       </NativeTabs.Trigger>
-
-      {/* Android's native tab bar caps at 5 items (Material limit). These routes stay
-          registered (and navigable) but out of the bar — reached via the "עוד" screen. */}
-      <NativeTabs.Trigger name="plan" hidden />
-      <NativeTabs.Trigger name="study-groups" hidden />
-      <NativeTabs.Trigger name="pomodoro" hidden />
-      <NativeTabs.Trigger name="profile" hidden />
-      <NativeTabs.Trigger name="settings" hidden />
     </NativeTabs>
   );
 }

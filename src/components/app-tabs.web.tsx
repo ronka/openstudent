@@ -34,19 +34,19 @@ export default function AppTabs() {
           <TabTrigger name="exams" href="/exams" asChild>
             <TabButton>מבחנים</TabButton>
           </TabTrigger>
-          <TabTrigger name="plan" href="/plan" asChild>
+          <TabTrigger name="plan" href="/more/plan" asChild>
             <TabButton>תוכנית</TabButton>
           </TabTrigger>
-          <TabTrigger name="study-groups" href="/study-groups" asChild>
+          <TabTrigger name="study-groups" href="/more/study-groups" asChild>
             <TabButton>קבוצות</TabButton>
           </TabTrigger>
-          <TabTrigger name="pomodoro" href="/pomodoro" asChild>
+          <TabTrigger name="pomodoro" href="/more/pomodoro" asChild>
             <TabButton>פומודורו</TabButton>
           </TabTrigger>
-          <TabTrigger name="profile" href="/profile" asChild>
+          <TabTrigger name="profile" href="/more/profile" asChild>
             <TabButton>פרופיל</TabButton>
           </TabTrigger>
-          <TabTrigger name="settings" href="/settings" asChild>
+          <TabTrigger name="settings" href="/more/settings" asChild>
             <TabButton>הגדרות</TabButton>
           </TabTrigger>
         </CustomTabList>
