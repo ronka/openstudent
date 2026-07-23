@@ -33,30 +33,18 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Icon sf="graduationcap" md="school" />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="plan">
-        <NativeTabs.Trigger.Label>תוכנית</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="calendar" md="event_note" />
+      <NativeTabs.Trigger name="more">
+        <NativeTabs.Trigger.Label>עוד</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="ellipsis" md="more_horiz" />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="study-groups">
-        <NativeTabs.Trigger.Label>קבוצות</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="person.3" md="groups" />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="pomodoro">
-        <NativeTabs.Trigger.Label>פומודורו</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="timer" md="timer" />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="profile">
-        <NativeTabs.Trigger.Label>פרופיל</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="person" md="person" />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="settings">
-        <NativeTabs.Trigger.Label>הגדרות</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="gearshape" md="settings" />
-      </NativeTabs.Trigger>
+      {/* Android's native tab bar caps at 5 items (Material limit). These routes stay
+          registered (and navigable) but out of the bar — reached via the "עוד" screen. */}
+      <NativeTabs.Trigger name="plan" hidden />
+      <NativeTabs.Trigger name="study-groups" hidden />
+      <NativeTabs.Trigger name="pomodoro" hidden />
+      <NativeTabs.Trigger name="profile" hidden />
+      <NativeTabs.Trigger name="settings" hidden />
     </NativeTabs>
   );
 }
