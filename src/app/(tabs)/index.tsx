@@ -14,7 +14,7 @@ import { Text } from '@/components/ui/text';
 import { Radius, Spacing } from '@/constants/theme';
 import { DEGREE_CREDITS_TARGET } from '@/data/constants';
 import { enableNotifications, markPromptSeen, usePromptSeen } from '@/data/notification-settings';
-import { useName } from '@/data/profile';
+import { useExemptCredits, useName } from '@/data/profile';
 import { randomQuote } from '@/data/quotes';
 import { getCurrentSemester, isCurrentSemester } from '@/data/semester';
 import {
@@ -37,6 +37,7 @@ export default function DashboardScreen() {
   const assignments = useAssignments();
   const exams = useExams();
   const name = useName();
+  const exemptCredits = useExemptCredits();
   const screenPadding = useScreenPadding();
   // The dashboard is behind the onboarding guard, so "onboarding complete" is implicit;
   // show the one-time nudge only to users who never saw the notifications prompt.
@@ -63,7 +64,7 @@ export default function DashboardScreen() {
 
   const [quote] = useState(() => randomQuote());
 
-  const degree = useMemo(() => degreeStats(courses), [courses]);
+  const degree = useMemo(() => degreeStats(courses, current, exemptCredits), [courses, current, exemptCredits]);
   const gpa = useMemo(() => gpaStats(exams, courses), [exams, courses]);
   const grades = useMemo(() => gradeTimeline(exams, courses), [exams, courses]);
   const upcomingExams = useMemo(() => upcomingExamsSorted(exams), [exams]);
@@ -175,7 +176,7 @@ export default function DashboardScreen() {
           <StatCard
             value={`${degreePercent}%`}
             label="מהתואר"
-            caption={`${degree.passedCredits}/${DEGREE_CREDITS_TARGET} נק״ז`}
+            caption={`${degree.completedCredits}/${DEGREE_CREDITS_TARGET} נק״ז`}
             progress={degree.degreePct}
           />
           <StatCard

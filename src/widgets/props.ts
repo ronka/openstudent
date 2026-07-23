@@ -14,6 +14,7 @@
 import type { WidgetTimelineEntry } from 'expo-widgets';
 
 import { DEGREE_CREDITS_TARGET } from '@/data/constants';
+import { getExemptCredits } from '@/data/profile';
 import { getCurrentSemester } from '@/data/semester';
 import { degreeStats, gpaStats, upcomingAssignmentsSorted, upcomingExamsSorted } from '@/data/stats';
 import type { Assignment, Course, Exam } from '@/data/types';
@@ -48,6 +49,8 @@ export interface ProgressProps {
   /** 0..1, for a gauge/bar if used. */
   degreePct: number;
   degreePctLabel: string;
+  /** Credits earned toward the degree — passed courses plus recognition for prior
+   * studies (`completedCredits`), matching the dashboard's `x/y נק״ז`. */
   passedCredits: number;
   /** The degree requirement (`DEGREE_CREDITS_TARGET`) — the same denominator
    * `degreePct` uses, so the ring and the `x/y נק״ז` label always agree. */
@@ -150,7 +153,7 @@ export function buildProgressTimeline(
   now: Date = new Date(),
 ): WidgetTimelineEntry<ProgressProps>[] {
   // Degree % and GPA are grade-derived, not date-derived, so a single snapshot suffices.
-  const degree = degreeStats(courses, getCurrentSemester(now));
+  const degree = degreeStats(courses, getCurrentSemester(now), getExemptCredits());
   const gpa = gpaStats(exams, courses);
   return [
     {
@@ -158,9 +161,9 @@ export function buildProgressTimeline(
       props: {
         degreePct: degree.degreePct,
         degreePctLabel: `${Math.round(degree.degreePct * 100)}%`,
-        passedCredits: degree.passedCredits,
+        passedCredits: degree.completedCredits,
         totalCredits: DEGREE_CREDITS_TARGET,
-        creditsLabel: `${degree.passedCredits}/${DEGREE_CREDITS_TARGET}`,
+        creditsLabel: `${degree.completedCredits}/${DEGREE_CREDITS_TARGET}`,
         gpa: gpa.gpa,
         gpaLabel: gpa.count > 0 ? gpa.gpa.toFixed(1) : '—',
       },

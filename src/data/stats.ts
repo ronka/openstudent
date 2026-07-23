@@ -13,8 +13,15 @@ export interface DegreeStats {
    * This is "how much is on the plan", not the degree requirement: use
    * `DEGREE_CREDITS_TARGET` for progress, never this. */
   totalCredits: number;
+  /** Credits from logged courses whose status is `passed` — recognition for prior
+   * studies is *not* in here (it has no course rows); see `completedCredits`. */
   passedCredits: number;
-  /** Passed credits / `DEGREE_CREDITS_TARGET`, clamped to 0..1. Deliberately *not*
+  /** נק״ז credited for prior studies elsewhere, straight from the profile setting. */
+  exemptCredits: number;
+  /** `passedCredits + exemptCredits` — everything that counts toward the degree, and
+   * the numerator of `degreePct`. This is what the UI should show beside the target. */
+  completedCredits: number;
+  /** Completed credits / `DEGREE_CREDITS_TARGET`, clamped to 0..1. Deliberately *not*
    * over `totalCredits`: that would make the bar mean "% of the courses I logged",
    * hitting 100% after three passed courses and dropping every time one is added. */
   degreePct: number;
@@ -24,7 +31,15 @@ export interface DegreeStats {
   totalCount: number;
 }
 
-export function degreeStats(courses: Course[], current: CurrentSemester = getCurrentSemester()): DegreeStats {
+/**
+ * `exemptCredits` is passed in (from `profile.ts`) rather than read here — this module
+ * stays pure so the dashboard, the plan tab and the widget can all reuse it.
+ */
+export function degreeStats(
+  courses: Course[],
+  current: CurrentSemester = getCurrentSemester(),
+  exemptCredits = 0
+): DegreeStats {
   let totalCredits = 0;
   let passedCredits = 0;
   let passedCount = 0;
@@ -48,11 +63,15 @@ export function degreeStats(courses: Course[], current: CurrentSemester = getCur
     }
   }
 
+  const completedCredits = passedCredits + exemptCredits;
+
   return {
     totalCredits,
     passedCredits,
+    exemptCredits,
+    completedCredits,
     // Clamped: passing more than the target (extra courses, exemptions) still reads 100%.
-    degreePct: Math.min(passedCredits / DEGREE_CREDITS_TARGET, 1),
+    degreePct: Math.min(completedCredits / DEGREE_CREDITS_TARGET, 1),
     passedCount,
     studyingCount,
     plannedCount,
