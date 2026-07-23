@@ -4,6 +4,7 @@ import { DEGREE_CREDITS_TARGET } from './constants';
 import { getItemSync, removeItemSync, setItemSync } from './kv-storage';
 
 const NAME_KEY = 'profile.name';
+const FACULTY_KEY = 'profile.faculty';
 const EXEMPT_CREDITS_KEY = 'profile.exemptCredits';
 
 function readExemptCredits(): number {
@@ -12,6 +13,7 @@ function readExemptCredits(): number {
 }
 
 let name = getItemSync(NAME_KEY) ?? '';
+let faculty = getItemSync(FACULTY_KEY) ?? '';
 let exemptCredits = readExemptCredits();
 const listeners = new Set<() => void>();
 
@@ -39,6 +41,23 @@ export function setName(next: string): void {
 /** Reactive read for the dashboard greeting — re-renders the moment the name is set. */
 export function useName(): string {
   return useSyncExternalStore(subscribe, getName);
+}
+
+/** The student's faculty (פקולטה), chosen from the course catalog; '' when unset. */
+export function getFaculty(): string {
+  return faculty;
+}
+
+export function setFaculty(next: string): void {
+  const trimmed = next.trim();
+  faculty = trimmed;
+  if (trimmed) setItemSync(FACULTY_KEY, trimmed);
+  else removeItemSync(FACULTY_KEY);
+  notify();
+}
+
+export function useFaculty(): string {
+  return useSyncExternalStore(subscribe, getFaculty);
 }
 
 /**

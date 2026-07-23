@@ -43,6 +43,9 @@ export default function AppTabs() {
           <TabTrigger name="pomodoro" href="/pomodoro" asChild>
             <TabButton>פומודורו</TabButton>
           </TabTrigger>
+          <TabTrigger name="profile" href="/profile" asChild>
+            <TabButton>פרופיל</TabButton>
+          </TabTrigger>
           <TabTrigger name="settings" href="/settings" asChild>
             <TabButton>הגדרות</TabButton>
           </TabTrigger>

@@ -1,18 +1,16 @@
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
-import { TextField } from '@/components/form-fields';
-import { FormSheet, SheetButton } from '@/components/form-sheet';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing } from '@/constants/theme';
 import { disableNotifications, rescheduleAll } from '@/data/notification-scheduler';
 import { enableNotifications, useNotificationsEnabled } from '@/data/notification-settings';
 import { resetOnboarding } from '@/data/onboarding';
-import { setExemptCredits, useExemptCredits } from '@/data/profile';
+import { setExemptCredits, setFaculty, setName } from '@/data/profile';
 import { resetAllData } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { getRTLDebugInfo, rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
@@ -23,23 +21,7 @@ export default function SettingsScreen() {
   const screenPadding = useScreenPadding();
   const router = useRouter();
   const notificationsEnabled = useNotificationsEnabled();
-  const exemptCredits = useExemptCredits();
   const appVersion = `${Constants.expoConfig?.version ?? '1.0.0'}-${UPDATE_VERSION}`;
-
-  const [exemptSheetOpen, setExemptSheetOpen] = useState(false);
-  const [exemptDraft, setExemptDraft] = useState('');
-
-  const openExemptSheet = useCallback(() => {
-    // Seed from the stored value on every open so a cancelled edit doesn't linger.
-    setExemptDraft(exemptCredits > 0 ? String(exemptCredits) : '');
-    setExemptSheetOpen(true);
-  }, [exemptCredits]);
-
-  const saveExemptCredits = useCallback(() => {
-    // An empty field means "none" — Number('') is 0, which clears the key.
-    setExemptCredits(Number(exemptDraft.trim().replace(',', '.')));
-    setExemptSheetOpen(false);
-  }, [exemptDraft]);
 
   const tapCountRef = useRef(0);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -78,6 +60,8 @@ export default function SettingsScreen() {
           text: 'איפוס נתונים ואונבורדינג',
           onPress: () => {
             resetAllData();
+            setName('');
+            setFaculty('');
             setExemptCredits(0);
             resetOnboarding();
             router.replace('/onboarding');
@@ -153,24 +137,6 @@ export default function SettingsScreen() {
           <Switch value={notificationsEnabled} onValueChange={handleToggleNotifications} />
         </ThemedView>
 
-        <Pressable onPress={openExemptSheet}>
-          {({ pressed }) => (
-            <ThemedView
-              type="card"
-              className="border-border"
-              style={[styles.row, pressed && styles.pressed]}>
-              <View style={styles.rowText}>
-                <ThemedText type="smallBold" style={styles.rowTitle}>
-                  הכרה בלימודים קודמים
-                </ThemedText>
-                <ThemedText type="small" themeColor="textSecondary" style={styles.rowTitle}>
-                  {exemptCredits > 0 ? `${exemptCredits} נק״ז פטור` : 'אין נק״ז פטור'}
-                </ThemedText>
-              </View>
-            </ThemedView>
-          )}
-        </Pressable>
-
         <Pressable onPress={handleAppDetailsPress}>
           {({ pressed }) => (
             <ThemedView
@@ -193,25 +159,6 @@ export default function SettingsScreen() {
           נבנה באהבה לסטודנטים 💙
         </ThemedText>
       </ScrollView>
-
-      <FormSheet
-        visible={exemptSheetOpen}
-        onClose={() => setExemptSheetOpen(false)}
-        title="הכרה בלימודים קודמים">
-        <View style={styles.sheetBody}>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.rowTitle}>
-            נק״ז שקיבלת בהכרה מלימודים קודמים (הנדסאי, מכללה או מוסד אחר). הם ייספרו בהתקדמות בתואר.
-          </ThemedText>
-          <TextField
-            label="נק״ז פטור"
-            value={exemptDraft}
-            onChangeText={setExemptDraft}
-            placeholder="0"
-            keyboardType="numeric"
-          />
-          <SheetButton label="שמירה" onPress={saveExemptCredits} />
-        </View>
-      </FormSheet>
     </ThemedView>
   );
 }
@@ -259,9 +206,6 @@ const styles = StyleSheet.create({
   },
   rowTitle: {
     textAlign: rtlTextAlign.start,
-  },
-  sheetBody: {
-    gap: Spacing.three,
   },
   pressed: {
     opacity: 0.7,

@@ -48,6 +48,11 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Icon sf="timer" md="timer" />
       </NativeTabs.Trigger>
 
+      <NativeTabs.Trigger name="profile">
+        <NativeTabs.Trigger.Label>פרופיל</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="person" md="person" />
+      </NativeTabs.Trigger>
+
       <NativeTabs.Trigger name="settings">
         <NativeTabs.Trigger.Label>הגדרות</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="gearshape" md="settings" />
