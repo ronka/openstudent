@@ -38,9 +38,13 @@ export function CourseCatalogPicker({
 
   useEffect(() => {
     if (!visible) return;
+    // Writing state from this effect is deliberate — the sheet stays mounted across
+    // opens, so useState initializers won't re-run; the rule doesn't model this reset.
+    /* eslint-disable react-hooks/set-state-in-effect */
     setSelected(new Map());
     setYear(current.year);
     setSemester(current.term);
+    /* eslint-enable react-hooks/set-state-in-effect */
     // Only re-run when the sheet is (re)opened.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);

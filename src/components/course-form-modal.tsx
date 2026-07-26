@@ -42,12 +42,16 @@ export function CourseFormModal({ visible, onClose, course }: { visible: boolean
   // Reset from props each time the sheet opens.
   useEffect(() => {
     if (!visible) return;
+    // Writing state from this effect is deliberate — the sheet stays mounted across
+    // opens, so useState initializers won't re-run; the rule doesn't model this reset.
+    /* eslint-disable react-hooks/set-state-in-effect */
     setStatus(course.statusOverride ?? 'auto');
     setYear(course.year !== undefined ? String(course.year) : '');
     setSemester(course.semester);
     setGrade(course.grade !== undefined ? String(course.grade) : '');
     setBinaryPass(course.binaryPass ?? false);
     setNotes(course.notes ?? '');
+    /* eslint-enable react-hooks/set-state-in-effect */
     // Only re-run when the sheet is (re)opened.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, course.id]);

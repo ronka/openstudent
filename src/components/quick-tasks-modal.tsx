@@ -22,12 +22,17 @@ export function QuickTasksModal({
   const [mamachCount, setMamachCount] = useState(0);
   const [pending, setPending] = useState<PendingTask[]>([]);
 
+  // Reset to the initial step/counts each time the sheet (re)opens. Writing state from
+  // this effect is deliberate — the sheet stays mounted across opens, so useState
+  // initializers won't re-run; the set-state-in-effect rule doesn't model this pattern.
   useEffect(() => {
     if (!visible) return;
+    /* eslint-disable react-hooks/set-state-in-effect */
     setStep('select');
     setMamanCount(0);
     setMamachCount(0);
     setPending([]);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [visible]);
 
   const total = mamanCount + mamachCount;

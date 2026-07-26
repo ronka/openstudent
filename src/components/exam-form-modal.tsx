@@ -42,6 +42,9 @@ export function ExamFormModal({
   // Reset from props each time the sheet opens (create vs. edit).
   useEffect(() => {
     if (!visible) return;
+    // Writing state from this effect is deliberate — the sheet stays mounted across
+    // opens, so useState initializers won't re-run; the rule doesn't model this reset.
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (exam) {
       setTitle(exam.title);
       setCourseId(exam.courseId);
@@ -55,6 +58,7 @@ export function ExamFormModal({
       setDate('');
       setGrade('');
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
     // Only re-run when the sheet is (re)opened.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
