@@ -2,6 +2,8 @@ import * as Notifications from 'expo-notifications';
 import { useSyncExternalStore } from 'react';
 import { Platform } from 'react-native';
 
+import { posthog } from '@/utils/analytics';
+
 import { getItemSync, setItemSync } from './kv-storage';
 import { getNotificationsEnabled } from './notification-settings';
 
@@ -161,11 +163,16 @@ export function resetTimer(): void {
  * Flip a finished running session to `complete`. Safe to call anytime (no-op unless the
  * clock has reached zero while running). The notification has already fired at this point,
  * so we do NOT cancel it. Driven by the UI tick and the AppState foreground listener.
+ *
+ * The `pomodoro_completed` event fires here — at the single transition edge — rather than
+ * from a render effect, so it fires exactly once no matter how many times the (persisted)
+ * `complete` state is re-observed by a remounting screen.
  */
 export function syncTimer(): void {
   if (state.status !== 'running') return;
   if (getSecondsLeft() === 0) {
     setState({ status: 'complete', endAt: null, remainingSeconds: 0, notificationId: null });
+    posthog.capture('pomodoro_completed');
   }
 }
 

@@ -61,10 +61,6 @@ export default function PomodoroScreen() {
     return () => sub.remove();
   }, []);
 
-  useEffect(() => {
-    if (isComplete) posthog.capture('pomodoro_completed');
-  }, [isComplete]);
-
   // Keep the screen on while the timer is counting down, so a focus session
   // isn't interrupted by the device auto-locking.
   useEffect(() => {
