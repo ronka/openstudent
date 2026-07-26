@@ -1,15 +1,21 @@
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
-import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useEffect, useReducer } from 'react';
+import { AppState, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
+import {
+  getSecondsLeft,
+  pauseTimer,
+  resetTimer,
+  startTimer,
+  syncTimer,
+  useTimerState,
+} from '@/data/pomodoro-timer';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { posthog } from '@/utils/analytics';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
-
-const FOCUS_DURATION_SECONDS = 25 * 60;
 
 const KEEP_AWAKE_TAG = 'pomodoro';
 
@@ -29,27 +35,31 @@ function formatTime(totalSeconds: number) {
 
 export default function PomodoroScreen() {
   const screenPadding = useScreenPadding();
-  const [secondsLeft, setSecondsLeft] = useState(FOCUS_DURATION_SECONDS);
-  const [isRunning, setIsRunning] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
+  const timer = useTimerState();
+  const isRunning = timer.status === 'running';
+  const isComplete = timer.status === 'complete';
 
+  // The timer is wall-clock based (see @/data/pomodoro-timer); this lightweight tick just
+  // refreshes the derived display and flips to `complete` at zero, it doesn't own the time.
+  const [, forceTick] = useReducer((n) => n + 1, 0);
   useEffect(() => {
-    if (!isRunning) return;
+    if (timer.status !== 'running') return;
 
     const interval = setInterval(() => {
-      setSecondsLeft((current) => {
-        if (current <= 1) {
-          clearInterval(interval);
-          setIsRunning(false);
-          setIsComplete(true);
-          return 0;
-        }
-        return current - 1;
-      });
-    }, 1000);
+      syncTimer();
+      forceTick();
+    }, 250);
 
     return () => clearInterval(interval);
-  }, [isRunning]);
+  }, [timer.status]);
+
+  // Resync on foreground so a session that finished while backgrounded is detected at once.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (s) => {
+      if (s === 'active') syncTimer();
+    });
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     if (isComplete) posthog.capture('pomodoro_completed');
@@ -67,28 +77,24 @@ export default function PomodoroScreen() {
   }, [isRunning]);
 
   function handleStart() {
-    if (secondsLeft === 0) return;
-    setIsComplete(false);
-    setIsRunning(true);
+    startTimer();
     posthog.capture('pomodoro_started');
   }
 
   function handlePause() {
-    setIsRunning(false);
-    posthog.capture('pomodoro_paused', { seconds_left: secondsLeft });
+    posthog.capture('pomodoro_paused', { seconds_left: getSecondsLeft() });
+    pauseTimer();
   }
 
   function handleReset() {
-    setIsRunning(false);
-    setIsComplete(false);
-    setSecondsLeft(FOCUS_DURATION_SECONDS);
+    resetTimer();
     posthog.capture('pomodoro_reset');
   }
 
   return (
     <ScrollView contentContainerStyle={[styles.content, screenPadding]}>
         <View style={styles.timerSection}>
-          <ThemedText style={styles.timer}>{formatTime(secondsLeft)}</ThemedText>
+          <ThemedText style={styles.timer}>{formatTime(getSecondsLeft())}</ThemedText>
 
           {isComplete && (
             <ThemedText type="smallBold" themeColor="textSecondary" style={styles.center}>
@@ -109,7 +115,7 @@ export default function PomodoroScreen() {
               <Pressable onPress={handleStart}>
                 <ThemedView type="text" style={styles.button}>
                   <ThemedText themeColor="background" style={styles.buttonText}>
-                    {secondsLeft === FOCUS_DURATION_SECONDS ? 'התחל' : 'המשך'}
+                    {timer.status === 'idle' ? 'התחל' : 'המשך'}
                   </ThemedText>
                 </ThemedView>
               </Pressable>
