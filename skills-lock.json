@@ -19,11 +19,35 @@
       "skillPath": "app-version-debug/SKILL.md",
       "computedHash": "35e7c7990fe10c1e9724f59e58b6e98f59b9311af31d8c32be567abde794b7f7"
     },
+    "apple-design": {
+      "source": "emilkowalski/skill",
+      "sourceType": "github",
+      "skillPath": "skills/apple-design/SKILL.md",
+      "computedHash": "8b94db67cb9edaad5f1501010804caa610131f1d2dfda0a27664b2e858deade3"
+    },
+    "find-animation-opportunities": {
+      "source": "emilkowalski/skill",
+      "sourceType": "github",
+      "skillPath": "skills/find-animation-opportunities/SKILL.md",
+      "computedHash": "8fb8492eb8fbed1313cb430b5831d925d9b8964ca24f3c41a6244cbd1fd98732"
+    },
     "gluestack-ui-v5": {
       "source": "gluestack/agent-skills",
       "sourceType": "github",
       "skillPath": ".agents/skills/gluestack-ui-v5/SKILL.md",
       "computedHash": "2d7e2ed985d31d2d058d62d3e14c56e3e159c4417d12afc0b22f0ce9702fa0a1"
+    },
+    "improve": {
+      "source": "shadcn/improve",
+      "sourceType": "github",
+      "skillPath": "skills/improve/SKILL.md",
+      "computedHash": "39a9358732dcff385e9e4d3e60b4547856f834e54a58b35e455aa9bd49928c13"
+    },
+    "improve-animations": {
+      "source": "emilkowalski/skill",
+      "sourceType": "github",
+      "skillPath": "skills/improve-animations/SKILL.md",
+      "computedHash": "eeb219a407e325b687af88db25771cc3018e3148245604112f5ac6990b6fd79c"
     },
     "neon": {
       "source": "neondatabase/agent-skills",
@@ -36,6 +60,12 @@
       "sourceType": "github",
       "skillPath": "skills/neon-postgres/SKILL.md",
       "computedHash": "800cc5890f74962e4e0dc15584cc17ea6f4c49f73dda35704f9630981abc3e5d"
+    },
+    "review-animations": {
+      "source": "emilkowalski/skill",
+      "sourceType": "github",
+      "skillPath": "skills/review-animations/SKILL.md",
+      "computedHash": "b9f669af5ae280c19a592a94611520335a81de25c88f225bf60ae4b2d66c8c7c"
     }
   }
 }
