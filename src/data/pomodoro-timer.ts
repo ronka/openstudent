@@ -186,3 +186,33 @@ function getSnapshot(): TimerState {
 export function useTimerState(): TimerState {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
+
+/**
+ * Subscribe to transitions plus a lightweight display tick. While `running`, the tick
+ * advances the derived wall-clock seconds and flips the store to `complete` at zero
+ * (via `syncTimer`); otherwise it's a no-op. The tick notifies unconditionally of any
+ * store change — `useSecondsLeft`'s primitive snapshot bails out of re-rendering when
+ * the displayed second hasn't changed.
+ */
+function subscribeTicking(listener: () => void) {
+  const unsubscribe = subscribe(listener);
+  const interval = setInterval(() => {
+    if (state.status !== 'running') return;
+    syncTimer();
+    listener();
+  }, 250);
+  return () => {
+    unsubscribe();
+    clearInterval(interval);
+  };
+}
+
+/**
+ * Reactive read of the seconds to display. This must be consumed as store state rather
+ * than read via `getSecondsLeft()` during render: a bare render-time read has no
+ * reactive dependency, so React Compiler memoizes the JSX around it and the countdown
+ * freezes on screen even though the wall-clock state keeps advancing.
+ */
+export function useSecondsLeft(): number {
+  return useSyncExternalStore(subscribeTicking, getSecondsLeft);
+}

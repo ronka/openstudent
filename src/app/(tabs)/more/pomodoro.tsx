@@ -1,23 +1,34 @@
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
-import { useEffect, useReducer } from 'react';
+import { useEffect } from 'react';
 import { AppState, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { ProgressBar } from '@/components/progress-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import {
+  FOCUS_DURATION_SECONDS,
   getSecondsLeft,
   pauseTimer,
   resetTimer,
   startTimer,
   syncTimer,
+  useSecondsLeft,
   useTimerState,
+  type TimerStatus,
 } from '@/data/pomodoro-timer';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { posthog } from '@/utils/analytics';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 const KEEP_AWAKE_TAG = 'pomodoro';
+
+const STATUS_LABELS: Record<TimerStatus, string> = {
+  idle: 'מוכנים לסבב של 25 דקות?',
+  running: 'בריכוז מלא 🎯',
+  paused: 'מושהה — לוקחים נשימה',
+  complete: 'כל הכבוד! זמן להפסקה 🎉',
+};
 
 const HOW_TO_STEPS = [
   'להחליט על המשימה שיש לעשות',
@@ -39,19 +50,11 @@ export default function PomodoroScreen() {
   const isRunning = timer.status === 'running';
   const isComplete = timer.status === 'complete';
 
-  // The timer is wall-clock based (see @/data/pomodoro-timer); this lightweight tick just
-  // refreshes the derived display and flips to `complete` at zero, it doesn't own the time.
-  const [, forceTick] = useReducer((n) => n + 1, 0);
-  useEffect(() => {
-    if (timer.status !== 'running') return;
-
-    const interval = setInterval(() => {
-      syncTimer();
-      forceTick();
-    }, 250);
-
-    return () => clearInterval(interval);
-  }, [timer.status]);
+  // The timer is wall-clock based (see @/data/pomodoro-timer); this reactive read owns
+  // the display refresh and flips the store to `complete` at zero. It must NOT be
+  // replaced by a render-time `getSecondsLeft()` call — that read has no reactive
+  // dependency, so React Compiler memoizes the JSX around it and the clock freezes.
+  const secondsLeft = useSecondsLeft();
 
   // Resync on foreground so a session that finished while backgrounded is detected at once.
   useEffect(() => {
@@ -87,45 +90,60 @@ export default function PomodoroScreen() {
     posthog.capture('pomodoro_reset');
   }
 
-  return (
-    <ScrollView contentContainerStyle={[styles.content, screenPadding]}>
-        <View style={styles.timerSection}>
-          <ThemedText style={styles.timer}>{formatTime(getSecondsLeft())}</ThemedText>
+  const progress = isComplete ? 1 : 1 - secondsLeft / FOCUS_DURATION_SECONDS;
+  const showReset = timer.status !== 'idle';
+  const primaryLabel = isRunning ? 'השהה' : isComplete ? 'סבב חדש' : timer.status === 'paused' ? 'המשך' : 'התחל';
 
-          {isComplete && (
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.center}>
-              הפומודורו הסתיים — זמן להפסקה
+  return (
+    <ThemedView style={styles.container}>
+      <ScrollView contentContainerStyle={[styles.content, screenPadding]}>
+        <View>
+          <ThemedText type="subtitle" style={styles.headline}>
+            פומודורו 🍅
+          </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary" style={styles.tagline}>
+            טיימר להתמקדות בלימודים — סבבים של 25 דקות
+          </ThemedText>
+        </View>
+
+        <View style={styles.timerSection}>
+          <ThemedView type={isComplete ? 'accentSoft' : 'backgroundElement'} style={styles.dial}>
+            <ThemedText style={styles.timer}>{formatTime(secondsLeft)}</ThemedText>
+            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.statusLabel}>
+              {STATUS_LABELS[timer.status]}
             </ThemedText>
-          )}
+          </ThemedView>
+
+          <View style={styles.progress}>
+            <ProgressBar value={progress} height={Spacing.one} />
+          </View>
 
           <View style={styles.controls}>
-            {isRunning ? (
-              <Pressable onPress={handlePause}>
-                <ThemedView type="text" style={styles.button}>
-                  <ThemedText themeColor="background" style={styles.buttonText}>
-                    השהה
-                  </ThemedText>
-                </ThemedView>
-              </Pressable>
-            ) : (
-              <Pressable onPress={handleStart}>
-                <ThemedView type="text" style={styles.button}>
-                  <ThemedText themeColor="background" style={styles.buttonText}>
-                    {timer.status === 'idle' ? 'התחל' : 'המשך'}
-                  </ThemedText>
+            <Pressable
+              accessibilityRole="button"
+              onPress={isRunning ? handlePause : handleStart}
+              style={({ pressed }) => pressed && styles.pressed}>
+              <ThemedView type="text" style={styles.primaryButton}>
+                <ThemedText themeColor="background" style={styles.buttonText}>
+                  {primaryLabel}
+                </ThemedText>
+              </ThemedView>
+            </Pressable>
+
+            {showReset && (
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleReset}
+                style={({ pressed }) => pressed && styles.pressed}>
+                <ThemedView type="backgroundElement" style={styles.secondaryButton}>
+                  <ThemedText style={styles.buttonText}>איפוס</ThemedText>
                 </ThemedView>
               </Pressable>
             )}
-
-            <Pressable onPress={handleReset}>
-              <ThemedView type="backgroundElement" style={styles.button}>
-                <ThemedText style={styles.buttonText}>איפוס</ThemedText>
-              </ThemedView>
-            </Pressable>
           </View>
         </View>
 
-        <View style={styles.section}>
+        <ThemedView type="backgroundElement" style={styles.card}>
           <ThemedText type="smallBold" style={styles.sectionTitle}>
             מה זה שיטת פומודורו?
           </ThemedText>
@@ -133,57 +151,97 @@ export default function PomodoroScreen() {
             טכניקת פומודורו היא שיטה לניהול זמן שפותחה על ידי פרנצ&apos;סקו סירילו בסוף שנות ה-80. הטכניקה
             משתמשת בטיימר כדי לפצל את ביצוע העבודה לפרקי זמן בני 25 דקות, המופרדים בהפסקות קצרות.
           </ThemedText>
-        </View>
+        </ThemedView>
 
-        <View style={styles.section}>
+        <ThemedView type="backgroundElement" style={styles.card}>
           <ThemedText type="smallBold" style={styles.sectionTitle}>
             איך ללמוד עם זה?
           </ThemedText>
           {HOW_TO_STEPS.map((step, index) => (
             <View key={step} style={styles.stepRow}>
-              <ThemedText type="smallBold">{index + 1}.</ThemedText>
+              <ThemedView type="accentSoft" style={styles.stepBadge}>
+                <ThemedText type="smallBold" themeColor="accent">
+                  {index + 1}
+                </ThemedText>
+              </ThemedView>
               <ThemedText type="small" themeColor="textSecondary" style={styles.stepText}>
                 {step}
               </ThemedText>
             </View>
           ))}
-        </View>
-    </ScrollView>
+        </ThemedView>
+      </ScrollView>
+    </ThemedView>
   );
 }
 
+const DIAL_SIZE = 240;
+
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   content: {
-    padding: Spacing.three,
+    paddingHorizontal: Spacing.three,
     gap: Spacing.four,
+  },
+  headline: {
+    textAlign: rtlTextAlign.start,
+  },
+  tagline: {
+    textAlign: rtlTextAlign.start,
   },
   timerSection: {
     alignItems: 'center',
-    gap: Spacing.three,
-    paddingVertical: Spacing.five,
+    gap: Spacing.four,
+  },
+  dial: {
+    width: DIAL_SIZE,
+    height: DIAL_SIZE,
+    borderRadius: DIAL_SIZE / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.one,
+    paddingHorizontal: Spacing.four,
   },
   timer: {
-    fontSize: 64,
-    lineHeight: 76,
+    fontSize: 56,
+    lineHeight: 68,
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
-  center: {
+  statusLabel: {
     textAlign: rtlTextAlign.center,
+  },
+  progress: {
+    alignSelf: 'stretch',
+    paddingHorizontal: Spacing.five,
   },
   controls: {
     flexDirection: rtlFlexDirection.row,
     gap: Spacing.three,
   },
-  button: {
+  pressed: {
+    opacity: 0.7,
+  },
+  primaryButton: {
+    minWidth: 140,
+    paddingVertical: Spacing.three,
+    borderRadius: Radius.pill,
+    alignItems: 'center',
+  },
+  secondaryButton: {
     paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
+    paddingVertical: Spacing.three,
+    borderRadius: Radius.pill,
+    alignItems: 'center',
   },
   buttonText: {
     textAlign: rtlTextAlign.center,
   },
-  section: {
+  card: {
+    borderRadius: Radius.lg,
+    padding: Spacing.three,
     gap: Spacing.two,
   },
   sectionTitle: {
@@ -194,7 +252,15 @@ const styles = StyleSheet.create({
   },
   stepRow: {
     flexDirection: rtlFlexDirection.row,
+    alignItems: 'center',
     gap: Spacing.two,
+  },
+  stepBadge: {
+    width: Spacing.four,
+    height: Spacing.four,
+    borderRadius: Radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   stepText: {
     flex: 1,
