@@ -44,3 +44,6 @@ example
 /android
 
 app-store-screenshots/
+
+# personal workspace exports
+/notion/
