@@ -13,7 +13,12 @@
 
 import { AppState, Platform } from 'react-native';
 
-import { assignmentsCollection, coursesCollection, examsCollection } from '@/data/store';
+import {
+  assignmentsCollection,
+  coursesCollection,
+  examsCollection,
+  recognizedCreditsCollection,
+} from '@/data/store';
 
 const DEBOUNCE_MS = 500;
 
@@ -32,7 +37,7 @@ export function initWidgets(): void {
     const courses = coursesCollection.getSnapshot();
     deadlinesWidget.updateTimeline(buildDeadlinesTimeline(courses, assignmentsCollection.getSnapshot(), now));
     examWidget.updateTimeline(buildExamTimeline(courses, examsCollection.getSnapshot(), now));
-    progressWidget.updateTimeline(buildProgressTimeline(courses, examsCollection.getSnapshot(), now));
+    progressWidget.updateTimeline(buildProgressTimeline(courses, now));
   };
 
   // Coalesce mutation bursts into a single refresh.
@@ -49,6 +54,7 @@ export function initWidgets(): void {
   coursesCollection.subscribe(scheduleRefresh);
   assignmentsCollection.subscribe(scheduleRefresh);
   examsCollection.subscribe(scheduleRefresh);
+  recognizedCreditsCollection.subscribe(scheduleRefresh);
   // Foregrounding after midnight: recompute "days left" immediately.
   AppState.addEventListener('change', (state) => {
     if (state === 'active') refresh();

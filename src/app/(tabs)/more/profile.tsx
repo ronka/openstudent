@@ -1,3 +1,4 @@
+import { Link, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -8,14 +9,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing } from '@/constants/theme';
 import { FACULTIES } from '@/data/faculties.generated';
-import {
-  setExemptCredits,
-  setFaculty,
-  setName,
-  useExemptCredits,
-  useFaculty,
-  useName,
-} from '@/data/profile';
+import { setFaculty, setName, useFaculty, useName } from '@/data/profile';
+import { recognizedCreditsTotal, useRecognizedCredits } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
@@ -23,15 +18,13 @@ export default function ProfileScreen() {
   const screenPadding = useScreenPadding();
   const name = useName();
   const faculty = useFaculty();
-  const exemptCredits = useExemptCredits();
+  const recognizedCredits = useRecognizedCredits();
+  const recognizedTotal = recognizedCreditsTotal(recognizedCredits);
 
   const [nameSheetOpen, setNameSheetOpen] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
 
   const [facultyModalOpen, setFacultyModalOpen] = useState(false);
-
-  const [exemptSheetOpen, setExemptSheetOpen] = useState(false);
-  const [exemptDraft, setExemptDraft] = useState('');
 
   const openNameSheet = useCallback(() => {
     // Seed from the stored value on every open so a cancelled edit doesn't linger.
@@ -43,17 +36,6 @@ export default function ProfileScreen() {
     setName(nameDraft);
     setNameSheetOpen(false);
   }, [nameDraft]);
-
-  const openExemptSheet = useCallback(() => {
-    setExemptDraft(exemptCredits > 0 ? String(exemptCredits) : '');
-    setExemptSheetOpen(true);
-  }, [exemptCredits]);
-
-  const saveExemptCredits = useCallback(() => {
-    // An empty field means "none" — Number('') is 0, which clears the key.
-    setExemptCredits(Number(exemptDraft.trim().replace(',', '.')));
-    setExemptSheetOpen(false);
-  }, [exemptDraft]);
 
   return (
     <ThemedView style={styles.container}>
@@ -103,23 +85,28 @@ export default function ProfileScreen() {
           )}
         </Pressable>
 
-        <Pressable onPress={openExemptSheet}>
-          {({ pressed }) => (
-            <ThemedView
-              type="card"
-              className="border-border"
-              style={[styles.row, pressed && styles.pressed]}>
-              <View style={styles.rowText}>
-                <ThemedText type="smallBold" style={styles.rowTitle}>
-                  הכרה בלימודים קודמים
-                </ThemedText>
-                <ThemedText type="small" themeColor="textSecondary" style={styles.rowTitle}>
-                  {exemptCredits > 0 ? `${exemptCredits} נק״ז פטור` : 'אין נק״ז פטור'}
-                </ThemedText>
-              </View>
-            </ThemedView>
-          )}
-        </Pressable>
+        <Link href={'/more/recognized-credits' as Href} asChild>
+          <Pressable>
+            {({ pressed }) => (
+              <ThemedView
+                type="card"
+                className="border-border"
+                style={[styles.row, pressed && styles.pressed]}>
+                <View style={styles.rowText}>
+                  <ThemedText type="smallBold" style={styles.rowTitle}>
+                    נק״ז מוכרות
+                  </ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary" style={styles.rowTitle}>
+                    {recognizedTotal > 0
+                      ? `${recognizedTotal} נק״ז · לימודים קודמים, פעילות ומילואים`
+                      : 'לימודים קודמים, פעילות ומילואים'}
+                  </ThemedText>
+                </View>
+                <ThemedText themeColor="textSecondary">‹</ThemedText>
+              </ThemedView>
+            )}
+          </Pressable>
+        </Link>
       </ScrollView>
 
       <FormSheet visible={nameSheetOpen} onClose={() => setNameSheetOpen(false)} title="שם">
@@ -149,25 +136,6 @@ export default function ProfileScreen() {
         clearLabel="ללא פקולטה"
         onClear={() => setFaculty('')}
       />
-
-      <FormSheet
-        visible={exemptSheetOpen}
-        onClose={() => setExemptSheetOpen(false)}
-        title="הכרה בלימודים קודמים">
-        <View style={styles.sheetBody}>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.rowTitle}>
-            נק״ז שקיבלת בהכרה מלימודים קודמים (הנדסאי, מכללה או מוסד אחר). הם ייספרו בהתקדמות בתואר.
-          </ThemedText>
-          <TextField
-            label="נק״ז פטור"
-            value={exemptDraft}
-            onChangeText={setExemptDraft}
-            placeholder="0"
-            keyboardType="numeric"
-          />
-          <SheetButton label="שמירה" onPress={saveExemptCredits} />
-        </View>
-      </FormSheet>
     </ThemedView>
   );
 }

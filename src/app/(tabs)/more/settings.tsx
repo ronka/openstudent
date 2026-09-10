@@ -10,7 +10,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import { disableNotifications, rescheduleAll } from '@/data/notification-scheduler';
 import { enableNotifications, useNotificationsEnabled } from '@/data/notification-settings';
 import { resetOnboarding } from '@/data/onboarding';
-import { setExemptCredits, setFaculty, setName } from '@/data/profile';
+import { setFaculty, setName } from '@/data/profile';
 import { resetAllData } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { getRTLDebugInfo, rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
@@ -62,7 +62,6 @@ export default function SettingsScreen() {
             resetAllData();
             setName('');
             setFaculty('');
-            setExemptCredits(0);
             resetOnboarding();
             router.replace('/onboarding');
           },

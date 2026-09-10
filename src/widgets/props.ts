@@ -13,10 +13,11 @@
 
 import type { WidgetTimelineEntry } from 'expo-widgets';
 
+import { calculateDegreeAverage } from '@/data/calculate-degree-average';
 import { DEGREE_CREDITS_TARGET } from '@/data/constants';
-import { getExemptCredits } from '@/data/profile';
 import { getCurrentSemester } from '@/data/semester';
-import { degreeStats, gpaStats, upcomingAssignmentsSorted, upcomingExamsSorted } from '@/data/stats';
+import { degreeStats, upcomingAssignmentsSorted, upcomingExamsSorted } from '@/data/stats';
+import { getRecognizedCreditsTotal } from '@/data/store';
 import type { Assignment, Course, Exam } from '@/data/types';
 
 /** How many future midnights to pre-schedule so "days left" flips without the app running. */
@@ -149,12 +150,11 @@ export function buildExamTimeline(
 
 export function buildProgressTimeline(
   courses: Course[],
-  exams: Exam[],
   now: Date = new Date(),
 ): WidgetTimelineEntry<ProgressProps>[] {
   // Degree % and GPA are grade-derived, not date-derived, so a single snapshot suffices.
-  const degree = degreeStats(courses, getCurrentSemester(now), getExemptCredits());
-  const gpa = gpaStats(exams, courses);
+  const degree = degreeStats(courses, getCurrentSemester(now), getRecognizedCreditsTotal());
+  const degreeAverage = calculateDegreeAverage(courses);
   return [
     {
       date: now,
@@ -164,8 +164,8 @@ export function buildProgressTimeline(
         passedCredits: degree.completedCredits,
         totalCredits: DEGREE_CREDITS_TARGET,
         creditsLabel: `${degree.completedCredits}/${DEGREE_CREDITS_TARGET}`,
-        gpa: gpa.gpa,
-        gpaLabel: gpa.count > 0 ? gpa.gpa.toFixed(1) : '—',
+        gpa: degreeAverage.average,
+        gpaLabel: degreeAverage.count > 0 ? degreeAverage.average.toFixed(1) : '—',
       },
     },
   ];

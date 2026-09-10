@@ -70,6 +70,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
+    "test": "tsx --test src/data/*.test.ts",
     "lint": "expo lint",
     "deploy:api": "npx expo export --platform web && npx eas deploy",
     "deploy:api:production": "npx expo export --platform web && npx eas deploy --prod",

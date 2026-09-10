@@ -4,26 +4,49 @@ import { Pressable, SectionList, StyleSheet, View } from 'react-native';
 import { Badge } from '@/components/badge';
 import { CourseCatalogPicker } from '@/components/course-catalog-picker';
 import { EntityRow } from '@/components/entity-row';
+import { FormSheet, SheetButton } from '@/components/form-sheet';
+import { RecognizedCreditFormModal } from '@/components/recognized-credit-form-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
-import { COURSE_STATUS_LABELS, COURSE_STATUS_TONES, SEMESTERS } from '@/data/constants';
+import { Radius, Spacing } from '@/constants/theme';
+import {
+  COURSE_STATUS_LABELS,
+  COURSE_STATUS_TONES,
+  DEGREE_CREDITS_TARGET,
+  RECOGNIZED_CREDIT_TYPE_LABELS,
+  SEMESTERS,
+} from '@/data/constants';
 import { deriveCourseStatus, getCurrentSemester } from '@/data/semester';
 import { degreeStats } from '@/data/stats';
-import { useCourses } from '@/data/store';
+import { recognizedCreditsTotal, useCourses, useRecognizedCredits } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
-import type { Course, Semester } from '@/data/types';
+import type { Course, RecognizedCredit, Semester } from '@/data/types';
 import { posthog } from '@/utils/analytics';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 export default function PlanScreen() {
   const courses = useCourses();
+  const recognizedCredits = useRecognizedCredits();
   const screenPadding = useScreenPadding();
   const current = useMemo(() => getCurrentSemester(), []);
   const [showCatalogPicker, setShowCatalogPicker] = useState(false);
+  const [showAddMenu, setShowAddMenu] = useState(false);
+  const [recognizedFormOpen, setRecognizedFormOpen] = useState(false);
+  const [editingRecognizedCredit, setEditingRecognizedCredit] = useState<RecognizedCredit | undefined>();
 
-  const degree = useMemo(() => degreeStats(courses, current), [courses, current]);
+  const recognizedTotal = useMemo(() => recognizedCreditsTotal(recognizedCredits), [recognizedCredits]);
+  const degree = useMemo(() => degreeStats(courses, current, recognizedTotal), [courses, current, recognizedTotal]);
   const showPastCoursesNudge = courses.length > 0 && degree.passedCount === 0;
+
+  function openNewRecognizedCredit() {
+    setEditingRecognizedCredit(undefined);
+    setRecognizedFormOpen(true);
+  }
+
+  function openRecognizedCredit(item: RecognizedCredit) {
+    setEditingRecognizedCredit(item);
+    setRecognizedFormOpen(true);
+  }
 
   const sections = useMemo(() => {
     const groups = new Map<string, { year: number; semester: Semester | '—'; courses: Course[] }>();
@@ -50,20 +73,56 @@ export default function PlanScreen() {
         sections={sections}
         keyExtractor={(course) => course.id}
         ListHeaderComponent={
-          showPastCoursesNudge ? (
-            <Pressable
-              onPress={() => {
-                posthog.capture('plan_add_past_courses_nudge_tapped');
-                setShowCatalogPicker(true);
-              }}
-              style={styles.nudgeWrapper}>
-              <ThemedView type="accentSoft" style={styles.nudge}>
-                <ThemedText type="smallBold" themeColor="accent" style={styles.nudgeText}>
-                  רוצה לראות התקדמות בתואר? הוסיפו קורסים שכבר עברת 🧭
+          <View style={styles.headerContent}>
+            <ThemedView type="card" className="border-border" style={styles.progressCard}>
+              <ThemedText type="smallBold" style={styles.sectionTitle}>
+                התקדמות בתואר
+              </ThemedText>
+              <ThemedText type="subtitle" style={styles.sectionTitle}>
+                {degree.completedCredits}/{DEGREE_CREDITS_TARGET} נק״ז
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.sectionTitle}>
+                {degree.passedCredits} מקורסים · {recognizedTotal} נק״ז מוכרות
+              </ThemedText>
+            </ThemedView>
+
+            {recognizedCredits.length > 0 && (
+              <View style={styles.recognizedSection}>
+                <ThemedText type="smallBold" style={styles.sectionTitle}>
+                  נק״ז מוכרות · {recognizedTotal}
                 </ThemedText>
-              </ThemedView>
-            </Pressable>
-          ) : null
+                {recognizedCredits.map((item) => (
+                  <Pressable key={item.id} onPress={() => openRecognizedCredit(item)}>
+                    {({ pressed }) => (
+                      <View style={pressed && styles.pressed}>
+                        <EntityRow
+                          title={RECOGNIZED_CREDIT_TYPE_LABELS[item.type]}
+                          subtitle={[item.year, item.note].filter(Boolean).join(' · ') || undefined}
+                          trailing={<ThemedText type="smallBold">{item.credits} נק״ז ›</ThemedText>}
+                        />
+                      </View>
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+            )}
+
+            <SheetButton label="＋ הוספה" onPress={() => setShowAddMenu(true)} />
+
+            {showPastCoursesNudge && (
+              <Pressable
+                onPress={() => {
+                  posthog.capture('plan_add_past_courses_nudge_tapped');
+                  setShowCatalogPicker(true);
+                }}>
+                <ThemedView type="accentSoft" style={styles.nudge}>
+                  <ThemedText type="smallBold" themeColor="accent" style={styles.nudgeText}>
+                    רוצה לראות התקדמות בתואר? הוסיפו קורסים שכבר עברת 🧭
+                  </ThemedText>
+                </ThemedView>
+              </Pressable>
+            )}
+          </View>
         }
         renderSectionHeader={({ section }) => (
           <View style={styles.timelineRow}>
@@ -123,6 +182,35 @@ export default function PlanScreen() {
         onAdded={() => setShowCatalogPicker(false)}
         source="plan"
       />
+
+      <FormSheet visible={showAddMenu} onClose={() => setShowAddMenu(false)} title="מה להוסיף?">
+        <View style={styles.addMenu}>
+          <Pressable
+            onPress={() => {
+              setShowAddMenu(false);
+              setShowCatalogPicker(true);
+            }}>
+            <EntityRow title="📚 קורס מהקטלוג" subtitle="הוספת קורס לתוכנית" trailing={<ThemedText>‹</ThemedText>} />
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              setShowAddMenu(false);
+              openNewRecognizedCredit();
+            }}>
+            <EntityRow
+              title="🎓 נק״ז מוכרות"
+              subtitle="לימודים קודמים, פעילות חברתית ומילואים"
+              trailing={<ThemedText>‹</ThemedText>}
+            />
+          </Pressable>
+        </View>
+      </FormSheet>
+
+      <RecognizedCreditFormModal
+        visible={recognizedFormOpen}
+        onClose={() => setRecognizedFormOpen(false)}
+        item={editingRecognizedCredit}
+      />
     </ThemedView>
   );
 }
@@ -134,9 +222,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  nudgeWrapper: {
-    paddingBottom: Spacing.three,
+  headerContent: { gap: Spacing.three, paddingBottom: Spacing.four },
+  progressCard: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: Radius.lg,
+    padding: Spacing.three,
+    gap: Spacing.half,
   },
+  recognizedSection: { gap: Spacing.two },
   nudge: {
     borderRadius: Spacing.three,
     padding: Spacing.three,
@@ -192,4 +285,6 @@ const styles = StyleSheet.create({
     textAlign: rtlTextAlign.center,
     marginTop: Spacing.four,
   },
+  addMenu: { gap: Spacing.two },
+  pressed: { opacity: 0.7 },
 });

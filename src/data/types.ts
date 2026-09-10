@@ -17,6 +17,7 @@ export type CourseStatus = 'planned' | 'studying' | 'passed' | 'failed' | 'aband
 export type Semester = 'א' | 'ב' | 'ג';
 export type AssignmentStatus = 'todo' | 'done';
 export type AssignmentType = 'MAMAN' | 'MAMACH';
+export type RecognizedCreditType = 'prior_studies' | 'social_activity' | 'reserve_service' | 'other';
 
 /** Courses (רשימת קורסים) — the central catalog. §2.1 */
 export interface Course {
@@ -40,7 +41,7 @@ export interface Course {
    * הפתוחה allows this in defined tracks, e.g. up to 3 courses in a bachelor's).
    * The course counts as passed for credits/degree progress, but its grades carry
    * no numeric weight: they're excluded from the average and the grade trend
-   * (see `examsForGpa`). Implies `passed` in `deriveCourseStatus`.
+   * (see `calculateDegreeAverage`). Implies `passed` in `deriveCourseStatus`.
    */
   binaryPass?: boolean;
   notes?: string;
@@ -67,6 +68,15 @@ export interface Exam {
   courseId: string;
   date: string;
   grade?: number;
+}
+
+/** Credits awarded outside a regular graded Open University course. */
+export interface RecognizedCredit {
+  id: string;
+  type: RecognizedCreditType;
+  credits: number;
+  year?: number;
+  note?: string;
 }
 
 /**

@@ -12,19 +12,25 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Text } from '@/components/ui/text';
 import { Radius, Spacing } from '@/constants/theme';
+import { calculateDegreeAverage } from '@/data/calculate-degree-average';
 import { DEGREE_CREDITS_TARGET } from '@/data/constants';
 import { enableNotifications, markPromptSeen, usePromptSeen } from '@/data/notification-settings';
-import { useExemptCredits, useName } from '@/data/profile';
+import { useName } from '@/data/profile';
 import { randomQuote } from '@/data/quotes';
 import { getCurrentSemester, isCurrentSemester } from '@/data/semester';
 import {
   degreeStats,
-  gpaStats,
-  gradeTimeline,
   upcomingAssignmentsSorted,
   upcomingExamsSorted,
 } from '@/data/stats';
-import { assignmentsCollection, useAssignments, useCourses, useExams } from '@/data/store';
+import {
+  assignmentsCollection,
+  recognizedCreditsTotal,
+  useAssignments,
+  useCourses,
+  useExams,
+  useRecognizedCredits,
+} from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { posthog } from '@/utils/analytics';
 import { formatDaysUntil } from '@/utils/date';
@@ -37,7 +43,8 @@ export default function DashboardScreen() {
   const assignments = useAssignments();
   const exams = useExams();
   const name = useName();
-  const exemptCredits = useExemptCredits();
+  const recognizedCredits = useRecognizedCredits();
+  const recognizedTotal = useMemo(() => recognizedCreditsTotal(recognizedCredits), [recognizedCredits]);
   const screenPadding = useScreenPadding();
   // The dashboard is behind the onboarding guard, so "onboarding complete" is implicit;
   // show the one-time nudge only to users who never saw the notifications prompt.
@@ -64,9 +71,8 @@ export default function DashboardScreen() {
 
   const [quote] = useState(() => randomQuote());
 
-  const degree = useMemo(() => degreeStats(courses, current, exemptCredits), [courses, current, exemptCredits]);
-  const gpa = useMemo(() => gpaStats(exams, courses), [exams, courses]);
-  const grades = useMemo(() => gradeTimeline(exams, courses), [exams, courses]);
+  const degree = useMemo(() => degreeStats(courses, current, recognizedTotal), [courses, current, recognizedTotal]);
+  const degreeAverage = useMemo(() => calculateDegreeAverage(courses), [courses]);
   const upcomingExams = useMemo(() => upcomingExamsSorted(exams), [exams]);
   const nextExam = upcomingExams[0];
 
@@ -180,9 +186,9 @@ export default function DashboardScreen() {
             progress={degree.degreePct}
           />
           <StatCard
-            value={gpa.count > 0 ? gpa.gpa.toFixed(1) : '—'}
+            value={degreeAverage.count > 0 ? degreeAverage.average.toFixed(1) : '—'}
             label="ציון ממוצע"
-            caption={`${gpa.count} מבחנים`}
+            caption={`${degreeAverage.count} קורסים`}
           />
         </View>
 
@@ -227,11 +233,13 @@ export default function DashboardScreen() {
           onPress={() => posthog.capture('dashboard_pomodoro_promo_tapped')}
         />
 
-        {grades.length > 0 && (
+        {degreeAverage.grades.length > 0 && (
           <DashboardCard title="מגמת ציונים">
-            <MiniBarChart data={grades.map((point) => ({ value: point.grade, key: point.date + point.title }))} />
+            <MiniBarChart
+              data={degreeAverage.grades.map((point) => ({ value: point.grade, key: point.courseId }))}
+            />
             <ThemedText type="small" themeColor="textSecondary" style={styles.cardCaption}>
-              {`ממוצע ${gpa.gpa.toFixed(1)} · הכי גבוה ${gpa.max} · הכי נמוך ${gpa.min}`}
+              {`ממוצע ${degreeAverage.average.toFixed(1)} · הכי גבוה ${degreeAverage.max} · הכי נמוך ${degreeAverage.min}`}
             </ThemedText>
           </DashboardCard>
         )}

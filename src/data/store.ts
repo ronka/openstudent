@@ -1,7 +1,10 @@
 import { useMemo, useSyncExternalStore } from 'react';
 
 import { getItemSync, setItemSync } from './kv-storage';
-import type { Assignment, Course, Exam } from './types';
+import type { Assignment, Course, Exam, RecognizedCredit } from './types';
+
+const RECOGNIZED_CREDITS_KEY = 'data.recognizedCredits';
+const LEGACY_EXEMPT_CREDITS_KEY = 'profile.exemptCredits';
 
 function hydrate<T>(key: string, fallback: T[]): T[] {
   const raw = getItemSync(key);
@@ -63,6 +66,24 @@ export const coursesCollection = createCollection<Course>('data.courses', []);
 export const assignmentsCollection = createCollection<Assignment>('data.assignments', []);
 export const examsCollection = createCollection<Exam>('data.exams', []);
 
+/** Convert the old single prior-studies number into the new itemized model once. */
+function migrateLegacyRecognizedCredits(): void {
+  if (getItemSync(RECOGNIZED_CREDITS_KEY) !== null) return;
+  const legacyCredits = Number(getItemSync(LEGACY_EXEMPT_CREDITS_KEY));
+  if (!Number.isFinite(legacyCredits) || legacyCredits <= 0) return;
+  const migrated: RecognizedCredit[] = [
+    {
+      id: 'recognized-credit-legacy-prior-studies',
+      type: 'prior_studies',
+      credits: legacyCredits,
+    },
+  ];
+  setItemSync(RECOGNIZED_CREDITS_KEY, JSON.stringify(migrated));
+}
+
+migrateLegacyRecognizedCredits();
+export const recognizedCreditsCollection = createCollection<RecognizedCredit>(RECOGNIZED_CREDITS_KEY, []);
+
 export function useCourses(): Course[] {
   return useSyncExternalStore(coursesCollection.subscribe, coursesCollection.getSnapshot);
 }
@@ -73,6 +94,18 @@ export function useAssignments(): Assignment[] {
 
 export function useExams(): Exam[] {
   return useSyncExternalStore(examsCollection.subscribe, examsCollection.getSnapshot);
+}
+
+export function useRecognizedCredits(): RecognizedCredit[] {
+  return useSyncExternalStore(recognizedCreditsCollection.subscribe, recognizedCreditsCollection.getSnapshot);
+}
+
+export function recognizedCreditsTotal(credits: RecognizedCredit[]): number {
+  return credits.reduce((total, item) => total + item.credits, 0);
+}
+
+export function getRecognizedCreditsTotal(): number {
+  return recognizedCreditsTotal(recognizedCreditsCollection.getSnapshot());
 }
 
 export function useCourse(id: string | undefined): Course | undefined {
@@ -99,4 +132,5 @@ export function resetAllData() {
   coursesCollection.reset();
   assignmentsCollection.reset();
   examsCollection.reset();
+  recognizedCreditsCollection.reset();
 }

@@ -18,7 +18,7 @@ const MENU_ITEMS: { href: string; emoji: string; title: string; subtitle: string
   { href: '/more/plan', emoji: '📅', title: 'תוכנית', subtitle: 'התקדמות בתואר וניהול קורסים', event: 'more_plan_tapped' },
   { href: '/more/study-groups', emoji: '👥', title: 'קבוצות', subtitle: 'קבוצות לימוד', event: 'more_study_groups_tapped' },
   { href: '/more/pomodoro', emoji: '🍅', title: 'פומודורו', subtitle: 'טיימר להתמקדות בלימודים', event: 'more_pomodoro_tapped' },
-  { href: '/more/profile', emoji: '👤', title: 'פרופיל', subtitle: 'שם, פקולטה ונק״ז פטור', event: 'more_profile_tapped' },
+  { href: '/more/profile', emoji: '👤', title: 'פרופיל', subtitle: 'שם, פקולטה ונק״ז מוכרות', event: 'more_profile_tapped' },
   { href: '/more/settings', emoji: '⚙️', title: 'הגדרות', subtitle: 'התראות ופרטי האפליקציה', event: 'more_settings_tapped' },
 ];
 

@@ -1,4 +1,11 @@
-import type { AssignmentStatus, AssignmentType, CourseLevel, CourseStatus, Semester } from './types';
+import type {
+  AssignmentStatus,
+  AssignmentType,
+  CourseLevel,
+  CourseStatus,
+  RecognizedCreditType,
+  Semester,
+} from './types';
 
 /**
  * נק״ז required for the degree — the denominator of the progress bar. A bachelor's at
@@ -69,3 +76,17 @@ export const COURSE_LEVEL_LABELS: Record<CourseLevel, string> = {
 };
 
 export const SEMESTERS: Semester[] = ['א', 'ב', 'ג'];
+
+export const RECOGNIZED_CREDIT_TYPES: RecognizedCreditType[] = [
+  'prior_studies',
+  'social_activity',
+  'reserve_service',
+  'other',
+];
+
+export const RECOGNIZED_CREDIT_TYPE_LABELS: Record<RecognizedCreditType, string> = {
+  prior_studies: 'הכרה בלימודים קודמים',
+  social_activity: 'פעילות חברתית',
+  reserve_service: 'שירות מילואים',
+  other: 'אחר',
+};
