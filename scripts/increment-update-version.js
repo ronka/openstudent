@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 
 function incrementUpdateVersion() {
   // Accept a custom settings path as CLI arg, or search common locations
@@ -53,8 +53,8 @@ function incrementUpdateVersion() {
 
   console.log(`UPDATE_VERSION bumped from ${currentVersion} to ${nextVersion} in ${settingsPath}`);
 
-  execSync(`git add ${JSON.stringify(settingsPath)}`, { stdio: 'inherit' });
-  execSync(`git commit -m ${JSON.stringify(`Bump UPDATE_VERSION to ${nextVersion}`)}`, { stdio: 'inherit' });
+  execFileSync('git', ['add', '--', settingsPath], { stdio: 'inherit' });
+  execFileSync('git', ['commit', '-m', `Bump UPDATE_VERSION to ${nextVersion}`], { stdio: 'inherit' });
 }
 
 incrementUpdateVersion();
