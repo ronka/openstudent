@@ -16,7 +16,7 @@ import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { posthog } from '@/utils/analytics';
 import { getRTLDebugInfo, rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
-const UPDATE_VERSION = 10;
+const UPDATE_VERSION = 11;
 const GITHUB_URL = 'https://openstudent.co.il/github';
 const ZERO_TO_APP_URL = 'https://openstudent.co.il/zero-to-app';
 
