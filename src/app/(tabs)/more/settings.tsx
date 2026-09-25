@@ -13,12 +13,9 @@ import { resetOnboarding } from '@/data/onboarding';
 import { setFaculty, setName } from '@/data/profile';
 import { resetAllData } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
-import { posthog } from '@/utils/analytics';
 import { getRTLDebugInfo, rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 const UPDATE_VERSION = 11;
-const GITHUB_URL = 'https://openstudent.co.il/github';
-const ZERO_TO_APP_URL = 'https://openstudent.co.il/zero-to-app';
 
 export default function SettingsScreen() {
   const screenPadding = useScreenPadding();
@@ -139,33 +136,6 @@ export default function SettingsScreen() {
           <Switch value={notificationsEnabled} onValueChange={handleToggleNotifications} />
         </ThemedView>
 
-        <Pressable
-          accessibilityRole="link"
-          accessibilityLabel="תרומה לפרויקט ב-GitHub"
-          onPress={() => {
-            posthog.capture('settings_github_clicked');
-            void Linking.openURL(GITHUB_URL);
-          }}>
-          {({ pressed }) => (
-            <ThemedView
-              type="card"
-              className="border-border"
-              style={[styles.row, pressed && styles.pressed]}>
-              <View style={styles.rowText}>
-                <ThemedText type="smallBold" style={styles.rowTitle}>
-                  פרויקט בקוד פתוח
-                </ThemedText>
-                <ThemedText type="small" themeColor="textSecondary" style={styles.rowTitle}>
-                  הקוד פתוח לכולם. מוזמנים להצטרף ולתרום לפרויקט.
-                </ThemedText>
-                <ThemedText type="smallBold" style={styles.rowTitle}>
-                  GitHub ↗
-                </ThemedText>
-              </View>
-            </ThemedView>
-          )}
-        </Pressable>
-
         <Pressable onPress={handleAppDetailsPress}>
           {({ pressed }) => (
             <ThemedView
@@ -184,26 +154,9 @@ export default function SettingsScreen() {
           )}
         </Pressable>
 
-        <View style={styles.footerGroup}>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.footer}>
-            נבנה באהבה לסטודנטים 💙
-          </ThemedText>
-          <Pressable
-            accessibilityRole="link"
-            accessibilityLabel="נבנה בעזרת תבנית המובייל של Zero to App"
-            onPress={() => {
-              posthog.capture('settings_zero_to_app_clicked');
-              void Linking.openURL(ZERO_TO_APP_URL);
-            }}
-            style={({ pressed }) => [styles.promo, pressed && styles.pressed]}>
-            <ThemedText type="small" themeColor="textSecondary" style={styles.footer}>
-              נבנה בעזרת תבנית המובייל של
-            </ThemedText>
-            <ThemedText type="smallBold" style={styles.footer}>
-              Zero to App ↗
-            </ThemedText>
-          </Pressable>
-        </View>
+        <ThemedText type="small" themeColor="textSecondary" style={styles.footer}>
+          נבנה באהבה לסטודנטים 💙
+        </ThemedText>
       </ScrollView>
     </ThemedView>
   );
@@ -258,13 +211,5 @@ const styles = StyleSheet.create({
   },
   footer: {
     textAlign: 'center',
-  },
-  footerGroup: {
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  promo: {
-    alignItems: 'center',
-    gap: Spacing.half,
   },
 });
