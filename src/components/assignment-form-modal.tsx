@@ -11,6 +11,7 @@ import { ASSIGNMENT_TYPE_LABELS, ASSIGNMENT_TYPES, assignmentNumbers, getAssignm
 import { assignmentsCollection, useAssignments, useCourses } from '@/data/store';
 import type { Assignment, AssignmentType } from '@/data/types';
 import { posthog } from '@/utils/analytics';
+import { noteMeaningfulAction } from '@/utils/store-review';
 import { rtlTextAlign } from '@/utils/rtl';
 
 /** First task number in the type's range not yet used by that course. */
@@ -112,6 +113,7 @@ export function AssignmentFormModal({
         type,
         has_due_date: !!payload.dueDate,
       });
+      noteMeaningfulAction();
     }
     onClose();
   }

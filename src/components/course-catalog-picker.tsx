@@ -12,6 +12,7 @@ import { deriveCourseStatus, getCurrentSemester, getYearOptions } from '@/data/s
 import { coursesCollection } from '@/data/store';
 import type { Course, Semester } from '@/data/types';
 import { posthog } from '@/utils/analytics';
+import { noteMeaningfulAction } from '@/utils/store-review';
 
 export function CourseCatalogPicker({
   visible,
@@ -78,6 +79,7 @@ export function CourseCatalogPicker({
       posthog.capture('course_created', { course_number: course.courseNumber ?? null, source });
       return { id: course.id, name: course.name };
     });
+    noteMeaningfulAction();
     onAdded(created);
   }
 

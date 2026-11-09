@@ -17,7 +17,7 @@ import { DEGREE_CREDITS_TARGET } from '@/data/constants';
 import { enableNotifications, markPromptSeen, usePromptSeen } from '@/data/notification-settings';
 import { useName } from '@/data/profile';
 import { randomQuote } from '@/data/quotes';
-import { getCurrentSemester, isCurrentSemester } from '@/data/semester';
+import { formatSemester, getCurrentSemester, isBetweenSemesters, isCurrentSemester } from '@/data/semester';
 import {
   degreeStats,
   upcomingAssignmentsSorted,
@@ -192,7 +192,7 @@ export default function DashboardScreen() {
           />
         </View>
 
-        <DashboardCard title="הסמסטר הנוכחי">
+        <DashboardCard title={`${isBetweenSemesters() ? 'הסמסטר הקרוב' : 'הסמסטר הנוכחי'} · ${formatSemester(current)}`}>
           {currentSemesterCourses.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary" style={styles.cardCaption}>
               אין קורסים בסמסטר הנוכחי

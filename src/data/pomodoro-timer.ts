@@ -3,6 +3,7 @@ import { useSyncExternalStore } from 'react';
 import { Platform } from 'react-native';
 
 import { posthog } from '@/utils/analytics';
+import { noteMeaningfulAction } from '@/utils/store-review';
 
 import { getItemSync, setItemSync } from './kv-storage';
 import { getNotificationsEnabled } from './notification-settings';
@@ -173,6 +174,7 @@ export function syncTimer(): void {
   if (getSecondsLeft() === 0) {
     setState({ status: 'complete', endAt: null, remainingSeconds: 0, notificationId: null });
     posthog.capture('pomodoro_completed');
+    noteMeaningfulAction();
   }
 }
 

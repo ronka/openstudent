@@ -13,6 +13,7 @@ import { useHasCompletedOnboarding } from '@/data/onboarding';
 import { useScreenViewTracking } from '@/hooks/use-screen-view';
 import { posthog } from '@/utils/analytics';
 import { initializeRTL } from '@/utils/rtl';
+import { startReviewPromptTracking } from '@/utils/store-review';
 import { initWidgets } from '@/widgets/updater';
 
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
@@ -63,6 +64,8 @@ export default function RootLayout() {
   // Keep local reminders in sync with the data: reconcile once on start, then on every
   // collection change. Idempotent, so a missed run (crash, OS purge) self-heals here.
   useEffect(() => startNotificationSync(), []);
+
+  useEffect(() => startReviewPromptTracking(), []);
 
   // The catalog is effectively static within a session (regenerated ~once per
   // semester), so keep it fresh for a long time and avoid refetching on remount.

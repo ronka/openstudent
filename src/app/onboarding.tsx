@@ -22,6 +22,7 @@ import { deriveCourseStatus, getCurrentSemester, getYearOptions } from '@/data/s
 import { assignmentsCollection, coursesCollection, examsCollection } from '@/data/store';
 import type { Assignment, Course, Exam, Semester } from '@/data/types';
 import { posthog } from '@/utils/analytics';
+import { noteMeaningfulAction } from '@/utils/store-review';
 import { rtlAlign, rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 type StruggleKey = 'deadlines' | 'progress';
@@ -156,6 +157,12 @@ export default function OnboardingScreen() {
     // The debounced collection subscriber would catch this flush too; reconcile now so
     // reminders for the just-created items are scheduled immediately.
     void reconcileNotifications();
+    // Same event as the in-app picker, so course_created counts every added course.
+    // Sent here, not at selection, so abandoned onboardings don't count.
+    for (const course of createdCourses) {
+      posthog.capture('course_created', { course_number: course.courseNumber ?? null, source: 'onboarding' });
+    }
+    if (createdCourses.length > 0) noteMeaningfulAction();
     posthog.capture('onboarding_completed', {
       struggles: Array.from(struggles),
       course_count: createdCourses.length,
