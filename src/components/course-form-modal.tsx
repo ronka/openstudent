@@ -9,6 +9,7 @@ import { COURSE_LEVEL_LABELS, COURSE_STATUS_LABELS, COURSE_STATUSES, SEMESTERS }
 import { coursesCollection } from '@/data/store';
 import type { Course, CourseStatus, Semester } from '@/data/types';
 import { posthog } from '@/utils/analytics';
+import { noteMeaningfulAction } from '@/utils/store-review';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 /** Parse a numeric text field; empty or invalid → undefined. */
@@ -57,6 +58,7 @@ export function CourseFormModal({ visible, onClose, course }: { visible: boolean
   }, [visible, course.id]);
 
   function handleSave() {
+    const gradeNewlyEntered = toNumber(grade) !== undefined && toNumber(grade) !== course.grade;
     coursesCollection.update(course.id, {
       statusOverride: status === 'auto' ? undefined : status,
       year: toNumber(year),
@@ -66,6 +68,7 @@ export function CourseFormModal({ visible, onClose, course }: { visible: boolean
       notes: notes.trim() || undefined,
     });
     posthog.capture('course_updated', { course_id: course.id, binary_pass: binaryPass });
+    if (gradeNewlyEntered) noteMeaningfulAction();
     onClose();
   }
 

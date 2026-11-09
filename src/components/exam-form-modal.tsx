@@ -9,6 +9,7 @@ import { Spacing } from '@/constants/theme';
 import { examsCollection, useCourses } from '@/data/store';
 import type { Exam } from '@/data/types';
 import { posthog } from '@/utils/analytics';
+import { noteMeaningfulAction } from '@/utils/store-review';
 
 /** Parse a numeric text field; empty or invalid → undefined. */
 function toNumber(value: string): number | undefined {
@@ -97,6 +98,7 @@ export function ExamFormModal({
     }
     if (gradeNewlyEntered) {
       posthog.capture('exam_grade_entered', { exam_id: payload.id, grade: payload.grade ?? null, source });
+      noteMeaningfulAction();
     }
     onClose();
   }

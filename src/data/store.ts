@@ -1,10 +1,12 @@
 import { useMemo, useSyncExternalStore } from 'react';
 
 import { getItemSync, setItemSync } from './kv-storage';
+import { migratedSemesterYear } from './semester';
 import type { Assignment, Course, Exam, RecognizedCredit } from './types';
 
 const RECOGNIZED_CREDITS_KEY = 'data.recognizedCredits';
 const LEGACY_EXEMPT_CREDITS_KEY = 'profile.exemptCredits';
+const SEMESTER_NAMING_MIGRATED_KEY = 'data.semesterNamingMigrated';
 
 function hydrate<T>(key: string, fallback: T[]): T[] {
   const raw = getItemSync(key);
@@ -83,6 +85,18 @@ function migrateLegacyRecognizedCredits(): void {
 
 migrateLegacyRecognizedCredits();
 export const recognizedCreditsCollection = createCollection<RecognizedCredit>(RECOGNIZED_CREDITS_KEY, []);
+
+/** Move courses saved under the old א naming to the academic-year naming, once. */
+function migrateSemesterNaming(): void {
+  if (getItemSync(SEMESTER_NAMING_MIGRATED_KEY) !== null) return;
+  for (const course of coursesCollection.getSnapshot()) {
+    const year = migratedSemesterYear(course);
+    if (year !== undefined) coursesCollection.update(course.id, { year });
+  }
+  setItemSync(SEMESTER_NAMING_MIGRATED_KEY, 'true');
+}
+
+migrateSemesterNaming();
 
 export function useCourses(): Course[] {
   return useSyncExternalStore(coursesCollection.subscribe, coursesCollection.getSnapshot);
