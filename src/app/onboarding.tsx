@@ -8,6 +8,7 @@ import { DashboardCard } from '@/components/dashboard-card';
 import { DateField } from '@/components/date-field';
 import { ChipField, ThemedTextInput } from '@/components/form-fields';
 import { buildAssignmentPayloads, buildPendingTasks, QuickTasksForm, type PendingTask } from '@/components/quick-tasks-form';
+import { SharedDeadlinesOffer } from '@/components/shared-deadlines-offer';
 import { TaskCheckbox } from '@/components/task-checkbox';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -19,6 +20,8 @@ import { enableNotifications, markPromptSeen } from '@/data/notification-setting
 import { markOnboardingComplete } from '@/data/onboarding';
 import { setName } from '@/data/profile';
 import { deriveCourseStatus, getCurrentSemester, getYearOptions } from '@/data/semester';
+import type { SharedDeadline } from '@/data/shared-deadlines';
+import { contributeAssignmentDeadline } from '@/data/shared-deadlines-api';
 import { assignmentsCollection, coursesCollection, examsCollection } from '@/data/store';
 import type { Assignment, Course, Exam, Semester } from '@/data/types';
 import { posthog } from '@/utils/analytics';
@@ -93,6 +96,13 @@ export default function OnboardingScreen() {
 
   const [createdAssignments, setCreatedAssignments] = useState<Assignment[]>([]);
   const [createdExams, setCreatedExams] = useState<Exam[]>([]);
+  // Assignments whose due date the student typed in (not defaulted or prefilled), shared
+  // anonymously once onboarding completes — see `contributeAssignmentDeadline`.
+  const [typedDueDates, setTypedDueDates] = useState<{ course: Course; assignment: Assignment }[]>([]);
+  const loopExisting = useMemo(
+    () => loopPending.map((task) => ({ type: task.type, taskNumber: task.number })),
+    [loopPending]
+  );
 
   const nearestDueDate = useMemo(() => {
     const dueDates = createdAssignments.map((assignment) => assignment.dueDate).filter((date): date is string => !!date);
@@ -159,6 +169,7 @@ export default function OnboardingScreen() {
     void reconcileNotifications();
     // Same event as the in-app picker, so course_created counts every added course.
     // Sent here, not at selection, so abandoned onboardings don't count.
+    for (const { course, assignment } of typedDueDates) void contributeAssignmentDeadline(course, assignment);
     for (const course of createdCourses) {
       posthog.capture('course_created', { course_number: course.courseNumber ?? null, source: 'onboarding' });
     }
@@ -205,6 +216,7 @@ export default function OnboardingScreen() {
     setCreatedCourses(created);
     setCreatedAssignments([]);
     setCreatedExams([]);
+    setTypedDueDates([]);
     setCourseLoopIndex(0);
     resetLoopForm();
     setStep(6);
@@ -231,6 +243,17 @@ export default function OnboardingScreen() {
     setLoopPending((prev) => prev.map((task, i) => (i === index ? { ...task, dueDate } : task)));
   }
 
+  /** Fold accepted shared deadlines into this course's pending tasks (not persisted yet). */
+  function handleAcceptShared(items: SharedDeadline[]) {
+    const merged = [
+      ...loopPending,
+      ...items.map((item) => ({ type: item.type, number: item.taskNumber, dueDate: item.dueDate })),
+    ];
+    setLoopPending(merged);
+    setLoopMamanCount(merged.filter((task) => task.type === 'MAMAN').length);
+    setLoopMamachCount(merged.filter((task) => task.type === 'MAMACH').length);
+  }
+
   function advanceCourseLoop() {
     const nextIndex = courseLoopIndex + 1;
     resetLoopForm();
@@ -248,6 +271,7 @@ export default function OnboardingScreen() {
     setCreatedCourses([]);
     setCreatedAssignments([]);
     setCreatedExams([]);
+    setTypedDueDates([]);
     setCourseLoopIndex(0);
     resetLoopForm();
   }
@@ -277,6 +301,8 @@ export default function OnboardingScreen() {
     if (loopPending.length > 0) {
       const payloads = buildAssignmentPayloads(course.id, loopPending);
       setCreatedAssignments((prev) => [...prev, ...payloads]);
+      const typed = payloads.filter((_, index) => loopPending[index].dueDate.trim());
+      setTypedDueDates((prev) => [...prev, ...typed.map((assignment) => ({ course, assignment }))]);
     }
     if (loopExamDate) {
       const exam: Exam = { id: `e-${Date.now()}-${courseLoopIndex}`, title: course.name, courseId: course.id, date: loopExamDate };
@@ -438,6 +464,13 @@ export default function OnboardingScreen() {
             <ThemedText type="subtitle" style={styles.headline}>
               {`קורס ${courseLoopIndex + 1}/${createdCourses.length} · ${createdCourses[courseLoopIndex].name}`}
             </ThemedText>
+
+            <SharedDeadlinesOffer
+              key={createdCourses[courseLoopIndex].id}
+              course={createdCourses[courseLoopIndex]}
+              existing={loopExisting}
+              onAccept={handleAcceptShared}
+            />
 
             <ThemedText type="smallBold" style={styles.sectionLabel}>
               מטלות ✍️

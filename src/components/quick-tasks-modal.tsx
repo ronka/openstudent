@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 
 import { FormSheet, SheetButton } from '@/components/form-sheet';
+import { SharedDeadlinesOffer } from '@/components/shared-deadlines-offer';
 import { buildAssignmentPayloads, buildPendingTasks, QuickTasksForm, type PendingTask } from '@/components/quick-tasks-form';
 import { Spacing } from '@/constants/theme';
-import { assignmentsCollection } from '@/data/store';
+import { contributeAssignmentDeadline } from '@/data/shared-deadlines-api';
+import { buildAssignmentsFromShared } from '@/data/shared-deadlines';
+import { assignmentsCollection, useAssignmentsByCourse, useCourse } from '@/data/store';
 
 export function QuickTasksModal({
   visible,
@@ -17,6 +20,8 @@ export function QuickTasksModal({
   courseName: string;
   onClose: () => void;
 }) {
+  const course = useCourse(courseId);
+  const existing = useAssignmentsByCourse(courseId);
   const [step, setStep] = useState<'select' | 'review'>('select');
   const [mamanCount, setMamanCount] = useState(0);
   const [mamachCount, setMamachCount] = useState(0);
@@ -47,14 +52,31 @@ export function QuickTasksModal({
   }
 
   function handleCreate() {
-    assignmentsCollection.addMany(buildAssignmentPayloads(courseId, pending));
+    const created = buildAssignmentPayloads(courseId, pending);
+    assignmentsCollection.addMany(created);
+    // Share only dates the student typed in — not the placeholder default.
+    if (course) {
+      pending.forEach((task, index) => {
+        if (task.dueDate.trim()) void contributeAssignmentDeadline(course, created[index]);
+      });
+    }
     onClose();
   }
 
   return (
     <FormSheet visible={visible} onClose={onClose} title={`מטלות ל${courseName}`}>
       {step === 'select' ? (
-        <View style={styles.body}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.body}>
+          {course?.courseNumber && (
+            <SharedDeadlinesOffer
+              course={course}
+              existing={existing}
+              onAccept={(items) => {
+                assignmentsCollection.addMany(buildAssignmentsFromShared(courseId, items));
+                onClose();
+              }}
+            />
+          )}
           <QuickTasksForm
             step="select"
             mamanCount={mamanCount}
@@ -66,7 +88,7 @@ export function QuickTasksModal({
           />
           <SheetButton label="המשך" onPress={goToReview} disabled={total === 0} />
           <SheetButton label="דלג" variant="ghost" onPress={onClose} />
-        </View>
+        </ScrollView>
       ) : (
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.body}>
           <QuickTasksForm

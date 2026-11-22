@@ -8,6 +8,7 @@ import { CourseStatusModal } from '@/components/course-status-modal';
 import { EntityRow } from '@/components/entity-row';
 import { ExamFormModal } from '@/components/exam-form-modal';
 import { SheetButton } from '@/components/form-sheet';
+import { SharedDeadlinesOffer } from '@/components/shared-deadlines-offer';
 import { NotFoundView } from '@/components/not-found-view';
 import { Section } from '@/components/section';
 import { TaskCheckbox } from '@/components/task-checkbox';
@@ -16,6 +17,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing } from '@/constants/theme';
 import { COURSE_STATUS_LABELS, COURSE_STATUS_TONES } from '@/data/constants';
 import { deriveCourseStatus, getCurrentSemester } from '@/data/semester';
+import { buildAssignmentsFromShared } from '@/data/shared-deadlines';
 import {
   assignmentsCollection,
   coursesCollection,
@@ -129,6 +131,14 @@ export default function CourseDetailScreen() {
             <SheetButton label="עריכה" size="sm" onPress={() => setShowCourseForm(true)} />
           </View>
         </ThemedView>
+
+        {course.courseNumber && assignments.length === 0 && (
+          <SharedDeadlinesOffer
+            course={course}
+            existing={assignments}
+            onAccept={(items) => assignmentsCollection.addMany(buildAssignmentsFromShared(course.id, items))}
+          />
+        )}
 
         <Section title="מטלות" emptyLabel="אין מטלות לקורס זה" isEmpty={assignments.length === 0}>
           {assignments.map((assignment) => {

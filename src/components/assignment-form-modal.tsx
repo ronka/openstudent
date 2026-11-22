@@ -8,6 +8,7 @@ import { FormSheet, SheetButton } from '@/components/form-sheet';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { ASSIGNMENT_TYPE_LABELS, ASSIGNMENT_TYPES, assignmentNumbers, getAssignmentName } from '@/data/constants';
+import { contributeAssignmentDeadline } from '@/data/shared-deadlines-api';
 import { assignmentsCollection, useAssignments, useCourses } from '@/data/store';
 import type { Assignment, AssignmentType } from '@/data/types';
 import { posthog } from '@/utils/analytics';
@@ -115,6 +116,9 @@ export function AssignmentFormModal({
       });
       noteMeaningfulAction();
     }
+    // Best-effort and detached: the local save above never waits on the network.
+    const course = courses.find((item) => item.id === courseId);
+    if (course && payload.dueDate) void contributeAssignmentDeadline(course, payload);
     onClose();
   }
 

@@ -35,6 +35,18 @@ export function getCurrentSemester(now: Date = new Date()): CurrentSemester {
   return { year: calendarYear, term: 'ג' };
 }
 
+/**
+ * First and last day (inclusive, `'YYYY-MM-DD'`) of a named semester, from the same
+ * calendar as `getCurrentSemester`: 2027א runs Oct 25, 2026 to Jan 31, 2027.
+ */
+export function getSemesterRange(year: number, term: Semester): { start: string; end: string } {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const day = (y: number, m: number, d: number) => `${y}-${pad(m)}-${pad(d)}`;
+  if (term === 'א') return { start: day(year - 1, AUTUMN_START_MONTH, AUTUMN_START_DAY), end: day(year, 1, 31) };
+  if (term === 'ב') return { start: day(year, SPRING_START_MONTH, SPRING_START_DAY), end: day(year, 6, 30) };
+  return { start: day(year, 7, 1), end: day(year, AUTUMN_START_MONTH, AUTUMN_START_DAY - 1) };
+}
+
 /** True from Feb 1 to Mar 6, after א has ended and before ב has started. */
 export function isBetweenSemesters(now: Date = new Date()): boolean {
   const month = now.getMonth() + 1;
