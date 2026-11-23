@@ -16,6 +16,7 @@ import { examsCollection, useCourses, useExams } from '@/data/store';
 import type { Exam } from '@/data/types';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { posthog } from '@/utils/analytics';
+import { formatDisplayDate } from '@/utils/date';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 type StatusFilter = 'all' | 'upcoming' | 'graded';
@@ -138,7 +139,7 @@ export default function ExamsScreen() {
               <Pressable onPress={() => openEdit(item)} style={({ pressed }) => pressed && styles.pressed}>
                 <EntityRow
                   title={item.title}
-                  subtitle={[courseNameById.get(item.courseId), item.date].filter(Boolean).join(' · ')}
+                  subtitle={[courseNameById.get(item.courseId), formatDisplayDate(item.date)].filter(Boolean).join(' · ')}
                   trailing={<Badge label={isPast ? String(item.grade) : 'קרב'} tone={isPast ? 'success' : 'info'} />}
                 />
               </Pressable>

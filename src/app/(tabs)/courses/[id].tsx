@@ -28,6 +28,7 @@ import {
 import type { Exam } from '@/data/types';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { posthog } from '@/utils/analytics';
+import { formatDisplayDate } from '@/utils/date';
 import { rtlFlexDirection, rtlMargin, rtlTextAlign } from '@/utils/rtl';
 
 export default function CourseDetailScreen() {
@@ -147,7 +148,7 @@ export default function CourseDetailScreen() {
               <EntityRow
                 key={assignment.id}
                 title={assignment.name}
-                subtitle={assignment.dueDate}
+                subtitle={formatDisplayDate(assignment.dueDate)}
                 leading={
                   <TaskCheckbox
                     checked={checked}
@@ -187,7 +188,7 @@ export default function CourseDetailScreen() {
                 <View style={styles.rowMain}>
                   <ThemedText style={styles.rowTitle}>{exam.title}</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
-                    {exam.date}
+                    {formatDisplayDate(exam.date)}
                   </ThemedText>
                 </View>
                 <ThemedText type="smallBold">{exam.grade !== undefined ? exam.grade : '—'}</ThemedText>

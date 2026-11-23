@@ -19,6 +19,7 @@ import type { Semester } from '@/data/types';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { posthog } from '@/utils/analytics';
 import { apiUrl } from '@/utils/api-origin';
+import { apiWriteHeaders } from '@/utils/api-write-headers';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 const YEAR_OPTIONS = getYearOptions();
@@ -27,7 +28,7 @@ async function reportLink(link: StudyGroupLink, reason: string) {
   try {
     await fetch(apiUrl(`/api/study-groups/${link.id}/report`), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...apiWriteHeaders() },
       body: JSON.stringify({ reason }),
     });
   } catch {
