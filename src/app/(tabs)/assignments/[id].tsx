@@ -5,6 +5,7 @@ import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { AssignmentFormModal } from '@/components/assignment-form-modal';
 import { SheetButton } from '@/components/form-sheet';
 import { NotFoundView } from '@/components/not-found-view';
+import { SharedDeadlineNote } from '@/components/shared-deadline-note';
 import { TaskCheckbox } from '@/components/task-checkbox';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -80,6 +81,8 @@ export default function AssignmentDetailScreen() {
           </ThemedText>
           {assignment.dueDate && <ThemedText themeColor="textSecondary">תאריך יעד {assignment.dueDate}</ThemedText>}
         </View>
+
+        {course && <SharedDeadlineNote course={course} assignment={assignment} />}
 
         <View style={styles.actions}>
           <View style={styles.actionButton}>

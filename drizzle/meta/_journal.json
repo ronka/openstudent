@@ -15,6 +15,13 @@
       "when": 1784407699905,
       "tag": "0001_lethal_lady_ursula",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795353170298,
+      "tag": "0002_glossy_mephistopheles",
+      "breakpoints": true
     }
   ]
 }
