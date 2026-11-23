@@ -6,6 +6,7 @@ import {
   upsertVote,
 } from '@/data/shared-deadlines-server';
 import { isValidInstallId, validateDeadlineKey, validateDeadlineVote } from '@/data/shared-deadlines';
+import { rejectUnauthorizedWrite } from '@/utils/api-write-auth';
 
 /**
  * Student-contributed ממ״ן/ממ״ח deadlines. Anonymous: writes carry a random on-device
@@ -38,6 +39,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const unauthorized = rejectUnauthorizedWrite(request);
+  if (unauthorized) return unauthorized;
+
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== 'object') {
     return Response.json({ error: 'Invalid request body' }, { status: 400 });

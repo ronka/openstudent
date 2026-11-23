@@ -2,8 +2,12 @@ import { eq, sql } from 'drizzle-orm';
 
 import { db } from '@/db/client';
 import { studyGroupLinks, studyGroupReports } from '@/db/schema';
+import { rejectUnauthorizedWrite } from '@/utils/api-write-auth';
 
 export async function POST(request: Request, { id }: Record<string, string>) {
+  const unauthorized = rejectUnauthorizedWrite(request);
+  if (unauthorized) return unauthorized;
+
   const body = await request.json().catch(() => null);
   const reason = typeof body?.reason === 'string' ? body.reason : null;
   if (!reason) {

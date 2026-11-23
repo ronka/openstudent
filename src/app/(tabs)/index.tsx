@@ -33,7 +33,7 @@ import {
 } from '@/data/store';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import { posthog } from '@/utils/analytics';
-import { formatDaysUntil } from '@/utils/date';
+import { formatDaysUntil, formatDisplayDate } from '@/utils/date';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 const OPEN_ASSIGNMENTS_LIMIT = 5;
@@ -256,7 +256,7 @@ export default function DashboardScreen() {
                   key={exam.id}
                   title={exam.title}
                   subtitle={courseNameById.get(exam.courseId)}
-                  trailing={<ThemedText type="smallBold">{exam.date}</ThemedText>}
+                  trailing={<ThemedText type="smallBold">{formatDisplayDate(exam.date)}</ThemedText>}
                   href={`/courses/${exam.courseId}`}
                   onPress={() => posthog.capture('dashboard_exam_tapped', { exam_id: exam.id })}
                 />
@@ -284,7 +284,7 @@ export default function DashboardScreen() {
                 <EntityRow
                   key={assignment.id}
                   title={assignment.name}
-                  subtitle={[courseNameById.get(assignment.courseId ?? ''), assignment.dueDate].filter(Boolean).join(' · ')}
+                  subtitle={[courseNameById.get(assignment.courseId ?? ''), formatDisplayDate(assignment.dueDate)].filter(Boolean).join(' · ')}
                   leading={
                     <TaskCheckbox
                       checked={false}

@@ -13,6 +13,7 @@ import { Spacing } from '@/constants/theme';
 import { ASSIGNMENT_TYPE_LABELS } from '@/data/constants';
 import { assignmentsCollection, useAssignment, useCourse } from '@/data/store';
 import { posthog } from '@/utils/analytics';
+import { formatDisplayDate } from '@/utils/date';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 export default function AssignmentDetailScreen() {
@@ -79,7 +80,7 @@ export default function AssignmentDetailScreen() {
           <ThemedText themeColor="textSecondary">
             {ASSIGNMENT_TYPE_LABELS[assignment.type]} {assignment.taskNumber}
           </ThemedText>
-          {assignment.dueDate && <ThemedText themeColor="textSecondary">תאריך יעד {assignment.dueDate}</ThemedText>}
+          {assignment.dueDate && <ThemedText themeColor="textSecondary">תאריך יעד {formatDisplayDate(assignment.dueDate)}</ThemedText>}
         </View>
 
         {course && <SharedDeadlineNote course={course} assignment={assignment} />}

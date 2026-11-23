@@ -1,5 +1,6 @@
 import { posthog } from '@/utils/analytics';
 import { apiUrl } from '@/utils/api-origin';
+import { apiWriteHeaders } from '@/utils/api-write-headers';
 
 import { getItemSync, setItemSync } from './kv-storage';
 import {
@@ -85,7 +86,7 @@ export async function submitDeadlineVote(
 ): Promise<boolean> {
   const result = await request('/api/shared-deadlines', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...apiWriteHeaders() },
     body: JSON.stringify({ ...key, type, taskNumber, dueDate, installId: getInstallId() }),
   });
   if (!result) return false;

@@ -5,6 +5,7 @@ import { db } from '@/db/client';
 import { studyGroupLinks } from '@/db/schema';
 import { detectPlatform } from '@/data/study-groups';
 import type { Semester } from '@/data/types';
+import { rejectUnauthorizedWrite } from '@/utils/api-write-auth';
 
 const SEMESTERS: Semester[] = ['א', 'ב', 'ג'];
 
@@ -28,6 +29,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const unauthorized = rejectUnauthorizedWrite(request);
+  if (unauthorized) return unauthorized;
+
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== 'object') {
     return Response.json({ error: 'Invalid request body' }, { status: 400 });

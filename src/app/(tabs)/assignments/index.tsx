@@ -18,6 +18,7 @@ import { getCurrentSemester, isCurrentSemester } from '@/data/semester';
 import { useScreenPadding } from '@/hooks/use-screen-padding';
 import type { Assignment, AssignmentStatus, AssignmentType } from '@/data/types';
 import { posthog } from '@/utils/analytics';
+import { formatDisplayDate } from '@/utils/date';
 import { rtlFlexDirection, rtlTextAlign } from '@/utils/rtl';
 
 type StatusFilter = 'all' | AssignmentStatus;
@@ -44,7 +45,7 @@ const STATUS_BADGE_TONE: Record<AssignmentStatus, BadgeTone> = {
 
 function AssignmentRow({ assignment, courseName }: { assignment: Assignment; courseName?: string }) {
   const checked = assignment.status === 'done';
-  const subtitle = [courseName, assignment.dueDate && `📅 ${assignment.dueDate}`].filter(Boolean).join(' · ');
+  const subtitle = [courseName, assignment.dueDate && `📅 ${formatDisplayDate(assignment.dueDate)}`].filter(Boolean).join(' · ');
   return (
     <SwipeableRow
       onDelete={() => {

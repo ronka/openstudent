@@ -27,3 +27,19 @@ export function formatDaysUntil(dateStr: string, now: Date = new Date()): string
   if (diff > 1) return `בעוד ${diff} ימים`;
   return `לפני ${Math.abs(diff)} ימים`;
 }
+
+/**
+ * Display form of a stored `'YYYY-MM-DD'` date in Hebrew, e.g. "6 בדצמבר 2026". Parsed as a
+ * local date (never `new Date('YYYY-MM-DD')`, which is UTC and shifts a day west of UTC).
+ * Empty input gives `''`; anything that is not a real calendar date is returned unchanged
+ * so no user data is ever hidden. The stored value stays ISO.
+ */
+export function formatDisplayDate(value: string | undefined | null): string {
+  if (!value) return '';
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  const date = match ? parseLocalDate(value.trim()) : null;
+  // Reject rollovers like 2026-02-31 (Date would silently turn it into March 3).
+  if (!match || !date || date.getMonth() + 1 !== Number(match[2]) || date.getDate() !== Number(match[3])) return value;
+  // Built per call (cheap) so it follows the device timezone if it changes mid-session.
+  return new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+}
